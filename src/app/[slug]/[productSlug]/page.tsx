@@ -54,8 +54,30 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: product.coverImageUrl ?? undefined,
+    offers: {
+      "@type": "Offer",
+      price: (product.priceCents / 100).toFixed(2),
+      priceCurrency: product.currency.toUpperCase(),
+      availability: "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: creator.storeName,
+      },
+    },
+  };
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {product.coverImageUrl && (
         <img
           src={product.coverImageUrl}

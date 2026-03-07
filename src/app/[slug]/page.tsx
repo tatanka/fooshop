@@ -41,8 +41,20 @@ export default async function StorePage({ params }: Props) {
       and(eq(products.creatorId, creator.id), eq(products.status, "published"))
     );
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: creator.storeName,
+    description: creator.storeDescription,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/${slug}`,
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="mb-12">
         <h1 className="text-4xl font-bold">{creator.storeName}</h1>
         <p className="mt-4 text-lg text-gray-600">

@@ -105,6 +105,17 @@ See `.env.example` for all required variables: DATABASE_URL, AUTH_SECRET, AUTH_G
 
 The `mcp-server/` directory is a separate npm package (`@fooshop/mcp-server`) that exposes the product catalog to AI agents. It calls the public Fooshop API and uses `FOOSHOP_API_URL` env var (defaults to https://fooshop.ai). Tools: `search_products`, `get_product`, `get_store`.
 
+## Git Workflow
+
+**Branches protetti:** `main` (produzione), `staging` (pre-produzione), `develop` (sviluppo). Mai commit diretti su questi branch.
+
+**Flusso:** `feat/*` o `fix/*` da develop → merge in `develop` → PR in `staging` → PR in `main`
+
+```
+feat/my-feature  ──→  develop  ──PR──→  staging  ──PR──→  main
+fix/my-bugfix    ──→  develop  ──PR──→  staging  ──PR──→  main
+```
+
 ## Design Documents
 
 - `2026-03-06-fooshop-design.md` — Full product design doc (vision, architecture, data model, flows)

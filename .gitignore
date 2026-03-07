@@ -36,6 +36,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local infra config
+infra.conf
+!infra.conf.example
+
 # vercel
 .vercel
 

@@ -23,9 +23,13 @@ export default async function DashboardPage() {
   // Check if Stripe Connect account is fully set up
   let stripeReady = false;
   if (creator.stripeConnectId) {
-    const { getStripe } = await import("@/lib/stripe");
-    const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
-    stripeReady = !!account.charges_enabled;
+    try {
+      const { getStripe } = await import("@/lib/stripe");
+      const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
+      stripeReady = !!account.charges_enabled;
+    } catch {
+      // Stripe API error — treat as not ready
+    }
   }
 
   const [[stats], [orderStats], recentOrders] = await Promise.all([

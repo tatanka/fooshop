@@ -166,6 +166,19 @@ export const orders = pgTable("orders", {
     .notNull(),
 });
 
+export const downloadTokens = pgTable("download_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => orders.id),
+  token: uuid("token").notNull().unique().$defaultFn(() => crypto.randomUUID()),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  downloadCount: integer("download_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const pageViews = pgTable("page_views", {
   id: uuid("id").primaryKey().defaultRandom(),
   productId: uuid("product_id").references(() => products.id),

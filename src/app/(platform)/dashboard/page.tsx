@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { creators, products, orders } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { StripeCTA } from "@/components/stripe-cta";
+import { StripeToast } from "@/components/stripe-toast";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -42,6 +44,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
+      <StripeToast />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -91,15 +94,18 @@ export default async function DashboardPage() {
         >
           Manage Products
         </a>
-        {!creator.stripeConnectId && (
-          <button
-            className="border px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-            id="connect-stripe"
-          >
-            Connect Stripe
-          </button>
+        {creator.stripeConnectId && (
+          <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+            Stripe connected
+          </span>
         )}
       </div>
+
+      {!creator.stripeConnectId && (
+        <div className="mt-6">
+          <StripeCTA creatorId={creator.id} />
+        </div>
+      )}
 
       {recentOrders.length > 0 && (
         <div className="mt-12">

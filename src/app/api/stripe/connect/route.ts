@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const accountLink = await getStripe().accountLinks.create({
     account: accountId,
     refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=connected`,
     type: "account_onboarding",
   });
 

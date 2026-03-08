@@ -47,12 +47,20 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-gray-600 mt-1">{creator.storeName}</p>
         </div>
-        <a
-          href={`/${creator.slug}`}
-          className="text-sm underline text-gray-500"
-        >
-          View store
-        </a>
+        <div className="flex gap-4">
+          <a
+            href="/dashboard/store"
+            className="text-sm underline text-gray-500"
+          >
+            Edit store
+          </a>
+          <a
+            href={`/${creator.slug}`}
+            className="text-sm underline text-gray-500"
+          >
+            View store
+          </a>
+        </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">

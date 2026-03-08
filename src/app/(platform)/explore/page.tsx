@@ -11,23 +11,10 @@ export const metadata: Metadata = {
     "Discover digital products from creators worldwide. Templates, presets, LUTs, prompts, and more.",
 };
 
-const CATEGORIES = [
-  "templates",
-  "presets",
-  "luts",
-  "prompts",
-  "guides",
-  "courses",
-  "assets",
-];
+import { CATEGORIES, categoryLabel } from "@/lib/categories";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  luts: "LUTs",
-};
-
-function categoryLabel(cat: string) {
-  return CATEGORY_LABELS[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1);
-}
+// Exclude "other" from explore page navigation
+const EXPLORE_CATEGORIES = CATEGORIES.filter((c) => c !== "other");
 
 export default async function ExplorePage() {
   const results = await db
@@ -56,7 +43,7 @@ export default async function ExplorePage() {
         >
           All
         </a>
-        {CATEGORIES.map((cat) => (
+        {EXPLORE_CATEGORIES.map((cat) => (
           <a
             key={cat}
             href={`/explore?category=${cat}`}

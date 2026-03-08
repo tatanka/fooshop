@@ -49,7 +49,7 @@ Respond with ONLY valid JSON (no markdown, no backticks):
       "title": "product name",
       "description": "compelling product description (2-3 sentences)",
       "suggestedPriceCents": 1999,
-      "category": "one of: templates, ebooks, courses, presets, prompts, assets, other",
+      "category": "one of: templates, presets, luts, prompts, guides, courses, assets, other",
       "tags": ["tag1", "tag2", "tag3"]
     }
   ],

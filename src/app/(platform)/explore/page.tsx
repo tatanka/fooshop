@@ -8,17 +8,26 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Explore Digital Products | Fooshop",
   description:
-    "Discover digital products from creators worldwide. Templates, ebooks, courses, presets, and more.",
+    "Discover digital products from creators worldwide. Templates, presets, LUTs, prompts, and more.",
 };
 
 const CATEGORIES = [
   "templates",
-  "ebooks",
-  "courses",
   "presets",
+  "luts",
   "prompts",
+  "guides",
+  "courses",
   "assets",
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  luts: "LUTs",
+};
+
+function categoryLabel(cat: string) {
+  return CATEGORY_LABELS[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1);
+}
 
 export default async function ExplorePage() {
   const results = await db
@@ -51,9 +60,9 @@ export default async function ExplorePage() {
           <a
             key={cat}
             href={`/explore?category=${cat}`}
-            className="px-4 py-2 rounded-full border hover:bg-gray-100 capitalize"
+            className="px-4 py-2 rounded-full border hover:bg-gray-100"
           >
-            {cat}
+            {categoryLabel(cat)}
           </a>
         ))}
       </nav>

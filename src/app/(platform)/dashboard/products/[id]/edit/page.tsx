@@ -5,13 +5,19 @@ import { useRouter, useParams } from "next/navigation";
 
 const CATEGORIES = [
   "templates",
-  "ebooks",
-  "courses",
   "presets",
+  "luts",
   "prompts",
+  "guides",
+  "courses",
   "assets",
   "other",
 ];
+
+const CATEGORY_LABELS: Record<string, string> = { luts: "LUTs" };
+function categoryLabel(cat: string) {
+  return CATEGORY_LABELS[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1);
+}
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -137,7 +143,7 @@ export default function EditProductPage() {
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {categoryLabel(cat)}
               </option>
             ))}
           </select>

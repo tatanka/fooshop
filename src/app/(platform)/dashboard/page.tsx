@@ -20,27 +20,27 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
-  const [stats] = await db
-    .select({
-      totalProducts: sql<number>`count(distinct ${products.id})`,
-    })
-    .from(products)
-    .where(eq(products.creatorId, creator.id));
-
-  const [orderStats] = await db
-    .select({
-      totalOrders: sql<number>`count(*)`,
-      totalRevenue: sql<number>`coalesce(sum(${orders.amountCents} - ${orders.platformFeeCents}), 0)`,
-    })
-    .from(orders)
-    .where(eq(orders.creatorId, creator.id));
-
-  const recentOrders = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.creatorId, creator.id))
-    .orderBy(desc(orders.createdAt))
-    .limit(5);
+  const [[stats], [orderStats], recentOrders] = await Promise.all([
+    db
+      .select({
+        totalProducts: sql<number>`count(distinct ${products.id})`,
+      })
+      .from(products)
+      .where(eq(products.creatorId, creator.id)),
+    db
+      .select({
+        totalOrders: sql<number>`count(*)`,
+        totalRevenue: sql<number>`coalesce(sum(${orders.amountCents} - ${orders.platformFeeCents}), 0)`,
+      })
+      .from(orders)
+      .where(eq(orders.creatorId, creator.id)),
+    db
+      .select()
+      .from(orders)
+      .where(eq(orders.creatorId, creator.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(5),
+  ]);
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">

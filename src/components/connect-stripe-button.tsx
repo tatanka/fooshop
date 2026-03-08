@@ -7,14 +7,20 @@ export function ConnectStripeButton() {
 
   async function handleConnect() {
     setLoading(true);
-    const res = await fetch("/api/stripe/connect", {
-      method: "POST",
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
+    try {
+      const res = await fetch("/api/stripe/connect", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch {
+      // fetch failed silently
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

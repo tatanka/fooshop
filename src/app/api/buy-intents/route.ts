@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   const product = await db
-    .select()
+    .select({ id: products.id, creatorId: products.creatorId })
     .from(products)
     .where(eq(products.id, productId))
     .then((rows) => rows[0]);

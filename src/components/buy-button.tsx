@@ -14,16 +14,22 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
   async function handleClick() {
     if (hasStripe) {
       setLoading(true);
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      try {
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch {
+        // fetch failed silently
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
       return;
     }
 
@@ -33,7 +39,7 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId }),
-    });
+    }).catch(() => {});
   }
 
   return (

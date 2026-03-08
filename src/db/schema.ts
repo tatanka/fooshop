@@ -159,8 +159,21 @@ export const orders = pgTable("orders", {
   buyerName: text("buyer_name"),
   amountCents: integer("amount_cents").notNull(),
   platformFeeCents: integer("platform_fee_cents").notNull(),
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
   status: orderStatusEnum("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const downloadTokens = pgTable("download_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => orders.id),
+  token: uuid("token").notNull().unique().$defaultFn(() => crypto.randomUUID()),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  downloadCount: integer("download_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

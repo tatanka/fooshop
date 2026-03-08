@@ -77,9 +77,10 @@ export async function PUT(
     await deleteObject(current.coverImageUrl).catch(() => {});
   }
 
+  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = body;
   const [updated] = await db
     .update(products)
-    .set(body)
+    .set({ title, description, priceCents, category, status, fileUrl, coverImageUrl })
     .where(and(eq(products.id, id), eq(products.creatorId, creator.id)))
     .returning();
 

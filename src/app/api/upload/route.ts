@@ -14,10 +14,20 @@ export async function POST(req: NextRequest) {
 
   const { filename, contentType, purpose } = await req.json();
 
+  if (!filename || !contentType) {
+    return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
+  }
+
+  if (purpose && !["file", "cover"].includes(purpose)) {
+    return NextResponse.json({ error: "Invalid purpose" }, { status: 400 });
+  }
+
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const maxMB = purpose === "cover" ? MAX_COVER_SIZE_MB : MAX_FILE_SIZE_MB;
+  const maxBytes = maxMB * 1024 * 1024;
 
-  const key = `products/${session.user.id}/${randomUUID()}/${filename}`;
-  const uploadUrl = await getUploadUrl(key, contentType);
+  const key = `products/${session.user.id}/${randomUUID()}/${safeName}`;
+  const uploadUrl = await getUploadUrl(key, contentType, maxBytes);
 
-  return NextResponse.json({ uploadUrl, key, maxSizeBytes: maxMB * 1024 * 1024 });
+  return NextResponse.json({ uploadUrl, key, maxSizeBytes: maxBytes });
 }

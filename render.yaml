@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fooshop
+    runtime: node
+    plan: starter
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fooshop-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://fooshop.ai
+
+databases:
+  - name: fooshop-db
+    plan: starter
+    databaseName: fooshop

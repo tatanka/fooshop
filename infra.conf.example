@@ -1,0 +1,9 @@
+# Fooshop local infrastructure config
+# Change ports here if defaults conflict with other services
+
+POSTGRES_PORT=5441
+POSTGRES_USER=fooshop
+POSTGRES_PASSWORD=fooshop
+POSTGRES_DB=fooshop
+
+APP_PORT=3009

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FileDropZone } from "@/components/ui/file-drop-zone";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 const CATEGORIES = [
   "templates",
@@ -28,22 +30,16 @@ export default function NewProductPage() {
   const [description, setDescription] = useState("");
   const [priceCents, setPriceCents] = useState("");
   const [category, setCategory] = useState("templates");
-  const [file, setFile] = useState<File | null>(null);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
 
-  async function uploadFile(f: File): Promise<string> {
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: f.name, contentType: f.type }),
-    });
-    const { uploadUrl, key } = await res.json();
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": f.type },
-      body: f,
-    });
-    return key;
+  const fileUpload = useFileUpload({ maxSizeMB: 100, purpose: "file" });
+  const coverUpload = useFileUpload({ maxSizeMB: 5, purpose: "cover" });
+
+  async function handleFileSelect(file: File) {
+    await fileUpload.upload(file);
+  }
+
+  async function handleCoverSelect(file: File) {
+    await coverUpload.upload(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,16 +48,6 @@ export default function NewProductPage() {
     setError("");
 
     try {
-      let fileUrl: string | undefined;
-      let coverImageUrl: string | undefined;
-
-      if (file) {
-        fileUrl = await uploadFile(file);
-      }
-      if (coverImage) {
-        coverImageUrl = await uploadFile(coverImage);
-      }
-
       const price = Math.round(parseFloat(priceCents) * 100);
       if (isNaN(price) || price <= 0) {
         throw new Error("Invalid price");
@@ -75,8 +61,8 @@ export default function NewProductPage() {
           description,
           priceCents: price,
           category,
-          fileUrl,
-          coverImageUrl,
+          fileUrl: fileUpload.key,
+          coverImageUrl: coverUpload.key,
         }),
       });
 
@@ -89,6 +75,8 @@ export default function NewProductPage() {
       setLoading(false);
     }
   }
+
+  const isSubmitting = loading || fileUpload.isUploading || coverUpload.isUploading;
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
@@ -149,36 +137,38 @@ export default function NewProductPage() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Product File
-          </label>
-          <input
-            type="file"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full"
-          />
-        </div>
+        <FileDropZone
+          label="Product File"
+          onFileSelect={handleFileSelect}
+          maxSizeMB={100}
+          progress={fileUpload.progress}
+          isUploading={fileUpload.isUploading}
+          fileName={fileUpload.fileName}
+          fileSize={fileUpload.fileSize}
+          error={fileUpload.error}
+        />
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Cover Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
-            className="w-full"
-          />
-        </div>
+        <FileDropZone
+          label="Cover Image"
+          onFileSelect={handleCoverSelect}
+          accept="image/*"
+          maxSizeMB={5}
+          progress={coverUpload.progress}
+          isUploading={coverUpload.isUploading}
+          fileName={coverUpload.fileName}
+          fileSize={coverUpload.fileSize}
+          error={coverUpload.error}
+        />
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create Product"}
+            {isSubmitting ? "Creating..." : "Create Product"}
           </button>
           <a
             href="/dashboard/products"

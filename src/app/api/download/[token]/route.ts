@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { downloadTokens, orders, products } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDownloadUrl } from "@/lib/r2";
 
 export async function GET(
@@ -14,7 +14,6 @@ export async function GET(
     .select({
       tokenId: downloadTokens.id,
       expiresAt: downloadTokens.expiresAt,
-      downloadCount: downloadTokens.downloadCount,
       fileUrl: products.fileUrl,
     })
     .from(downloadTokens)
@@ -38,7 +37,7 @@ export async function GET(
   // Increment download count
   await db
     .update(downloadTokens)
-    .set({ downloadCount: result.downloadCount + 1 })
+    .set({ downloadCount: sql`${downloadTokens.downloadCount} + 1` })
     .where(eq(downloadTokens.id, result.tokenId));
 
   // fileUrl is the R2 object key

@@ -20,6 +20,14 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
+  // Check if Stripe Connect account is fully set up
+  let stripeReady = false;
+  if (creator.stripeConnectId) {
+    const { getStripe } = await import("@/lib/stripe");
+    const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
+    stripeReady = !!account.charges_enabled;
+  }
+
   const [[stats], [orderStats], recentOrders] = await Promise.all([
     db
       .select({
@@ -94,14 +102,14 @@ export default async function DashboardPage() {
         >
           Manage Products
         </a>
-        {creator.stripeConnectId && (
+        {stripeReady && (
           <span className="text-sm text-green-600 font-medium flex items-center gap-1">
             Stripe connected
           </span>
         )}
       </div>
 
-      {!creator.stripeConnectId && (
+      {!stripeReady && (
         <div className="mt-6">
           <StripeCTA creatorId={creator.id} />
         </div>

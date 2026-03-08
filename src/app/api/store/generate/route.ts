@@ -20,14 +20,25 @@ export async function POST(req: NextRequest) {
     .replace(/(^-|-$)/g, "");
 
   await db
-    .update(creators)
-    .set({
+    .insert(creators)
+    .values({
+      userId: session.user.id,
+      email: session.user.email!,
+      name: session.user.name ?? session.user.email!,
       storeName: generated.storeName,
       storeDescription: generated.storeDescription,
       storeTheme: generated.theme,
       slug,
     })
-    .where(eq(creators.userId, session.user.id));
+    .onConflictDoUpdate({
+      target: creators.userId,
+      set: {
+        storeName: generated.storeName,
+        storeDescription: generated.storeDescription,
+        storeTheme: generated.theme,
+        slug,
+      },
+    });
 
   return NextResponse.json({ ...generated, slug });
 }

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       description: body.description,
       priceCents: body.priceCents,
       category: body.category,
-      status: "draft",
+      status: body.status ?? "published",
     })
     .returning();
 

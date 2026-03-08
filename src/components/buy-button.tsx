@@ -10,10 +10,12 @@ interface BuyButtonProps {
 export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
     if (hasStripe) {
       setLoading(true);
+      setError(null);
       try {
         const res = await fetch("/api/checkout", {
           method: "POST",
@@ -21,12 +23,17 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
           body: JSON.stringify({ productId }),
         });
         const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? "Something went wrong. Please try again.");
+          return;
+        }
         if (data.url) {
           window.location.href = data.url;
           return;
         }
+        setError("Something went wrong. Please try again.");
       } catch {
-        // fetch failed silently
+        setError("Connection failed. Please check your internet and try again.");
       } finally {
         setLoading(false);
       }
@@ -44,13 +51,18 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
 
   return (
     <>
-      <button
-        onClick={handleClick}
-        disabled={loading}
-        className="bg-black text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
-      >
-        {loading ? "Loading..." : "Buy Now"}
-      </button>
+      <div>
+        <button
+          onClick={handleClick}
+          disabled={loading}
+          className="bg-black text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+        >
+          {loading ? "Loading..." : "Buy Now"}
+        </button>
+        {error && (
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+        )}
+      </div>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

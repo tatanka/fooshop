@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, calculatePlatformFee } from "@/lib/stripe";
 import { db } from "@/db";
-import { orders } from "@/db/schema";
+import { orders, downloadTokens } from "@/db/schema";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const session = event.data.object;
     const { productId, creatorId } = session.metadata!;
 
-    await db.insert(orders).values({
+    const [order] = await db.insert(orders).values({
       productId,
       creatorId,
       buyerEmail: session.customer_details?.email ?? "unknown",
@@ -31,6 +31,11 @@ export async function POST(req: NextRequest) {
       platformFeeCents: calculatePlatformFee(session.amount_total!),
       stripePaymentIntentId: session.payment_intent as string,
       status: "completed",
+    }).returning();
+
+    await db.insert(downloadTokens).values({
+      orderId: order.id,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
     });
   }
 

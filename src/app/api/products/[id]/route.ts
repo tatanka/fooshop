@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { products, creators } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { deleteObject } from "@/lib/r2";
 
 export async function GET(
   req: NextRequest,
@@ -57,6 +58,25 @@ export async function PUT(
   }
 
   const body = await req.json();
+
+  // Fetch current product to check for file replacement
+  const [current] = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.id, id), eq(products.creatorId, creator.id)));
+
+  if (!current) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Clean up old R2 files if being replaced
+  if (body.fileUrl && current.fileUrl && body.fileUrl !== current.fileUrl) {
+    await deleteObject(current.fileUrl).catch(() => {});
+  }
+  if (body.coverImageUrl && current.coverImageUrl && body.coverImageUrl !== current.coverImageUrl) {
+    await deleteObject(current.coverImageUrl).catch(() => {});
+  }
+
   const [updated] = await db
     .update(products)
     .set(body)

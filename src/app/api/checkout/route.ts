@@ -30,36 +30,51 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Verify the Connect account can receive transfers
+  const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
+  if (!account.charges_enabled) {
+    return NextResponse.json(
+      { error: "Creator has not completed payment setup yet" },
+      { status: 400 }
+    );
+  }
+
   const platformFee = calculatePlatformFee(product.priceCents);
 
-  const checkoutSession = await getStripe().checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: product.currency,
-          product_data: {
-            name: product.title,
-            description: product.description,
+  try {
+    const checkoutSession = await getStripe().checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: product.currency,
+            product_data: {
+              name: product.title,
+              description: product.description,
+            },
+            unit_amount: product.priceCents,
           },
-          unit_amount: product.priceCents,
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      payment_intent_data: {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: creator.stripeConnectId,
+        },
       },
-    ],
-    payment_intent_data: {
-      application_fee_amount: platformFee,
-      transfer_data: {
-        destination: creator.stripeConnectId,
+      metadata: {
+        productId: product.id,
+        creatorId: creator.id,
       },
-    },
-    metadata: {
-      productId: product.id,
-      creatorId: creator.id,
-    },
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/${creator.slug}/${product.slug}`,
-  });
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/${creator.slug}/${product.slug}`,
+    });
 
-  return NextResponse.json({ url: checkoutSession.url });
+    return NextResponse.json({ url: checkoutSession.url });
+  } catch (err) {
+    console.error("Checkout session creation failed:", err);
+    const message = err instanceof Error ? err.message : "Payment service error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

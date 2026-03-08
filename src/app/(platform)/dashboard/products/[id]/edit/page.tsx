@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { FileDropZone } from "@/components/ui/file-drop-zone";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 const CATEGORIES = [
   "templates",
@@ -19,6 +21,12 @@ function categoryLabel(cat: string) {
   return CATEGORY_LABELS[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
+function filenameFromKey(key: string | null): string | null {
+  if (!key) return null;
+  const parts = key.split("/");
+  return parts[parts.length - 1] || null;
+}
+
 export default function EditProductPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
@@ -32,6 +40,13 @@ export default function EditProductPage() {
   const [category, setCategory] = useState("templates");
   const [status, setStatus] = useState("published");
 
+  // Existing file info from DB
+  const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null);
+  const [existingCoverUrl, setExistingCoverUrl] = useState<string | null>(null);
+
+  const fileUpload = useFileUpload({ maxSizeMB: 100, purpose: "file" });
+  const coverUpload = useFileUpload({ maxSizeMB: 5, purpose: "cover" });
+
   useEffect(() => {
     fetch(`/api/products/${id}`)
       .then((res) => {
@@ -44,10 +59,20 @@ export default function EditProductPage() {
         setPriceCents((product.priceCents / 100).toFixed(2));
         setCategory(product.category);
         setStatus(product.status);
+        setExistingFileUrl(product.fileUrl);
+        setExistingCoverUrl(product.coverImageUrl);
       })
       .catch(() => setError("Failed to load product"))
       .finally(() => setFetching(false));
   }, [id]);
+
+  async function handleFileSelect(file: File) {
+    await fileUpload.upload(file);
+  }
+
+  async function handleCoverSelect(file: File) {
+    await coverUpload.upload(file);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,16 +85,26 @@ export default function EditProductPage() {
         throw new Error("Invalid price");
       }
 
+      const body: Record<string, unknown> = {
+        title,
+        description,
+        priceCents: price,
+        category,
+        status,
+      };
+
+      // Only send file URLs if new files were uploaded
+      if (fileUpload.key) {
+        body.fileUrl = fileUpload.key;
+      }
+      if (coverUpload.key) {
+        body.coverImageUrl = coverUpload.key;
+      }
+
       const res = await fetch(`/api/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          priceCents: price,
-          category,
-          status,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) throw new Error("Failed to update product");
@@ -89,6 +124,8 @@ export default function EditProductPage() {
       </main>
     );
   }
+
+  const isSubmitting = loading || fileUpload.isUploading || coverUpload.isUploading;
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
@@ -161,15 +198,38 @@ export default function EditProductPage() {
           </select>
         </div>
 
+        <FileDropZone
+          label="Product File"
+          onFileSelect={handleFileSelect}
+          maxSizeMB={100}
+          progress={fileUpload.progress}
+          isUploading={fileUpload.isUploading}
+          fileName={fileUpload.fileName ?? filenameFromKey(existingFileUrl)}
+          fileSize={fileUpload.fileSize}
+          error={fileUpload.error}
+        />
+
+        <FileDropZone
+          label="Cover Image"
+          onFileSelect={handleCoverSelect}
+          accept="image/*"
+          maxSizeMB={5}
+          progress={coverUpload.progress}
+          isUploading={coverUpload.isUploading}
+          fileName={coverUpload.fileName ?? filenameFromKey(existingCoverUrl)}
+          fileSize={coverUpload.fileSize}
+          error={coverUpload.error}
+        />
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </button>
           <a
             href="/dashboard/products"

@@ -1,0 +1,47 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { downloadTokens, orders, products } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { getDownloadUrl } from "@/lib/r2";
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+
+  const result = await db
+    .select({
+      tokenId: downloadTokens.id,
+      expiresAt: downloadTokens.expiresAt,
+      downloadCount: downloadTokens.downloadCount,
+      fileUrl: products.fileUrl,
+    })
+    .from(downloadTokens)
+    .innerJoin(orders, eq(downloadTokens.orderId, orders.id))
+    .innerJoin(products, eq(orders.productId, products.id))
+    .where(eq(downloadTokens.token, token))
+    .then((rows) => rows[0]);
+
+  if (!result) {
+    return NextResponse.json({ error: "Invalid download link" }, { status: 404 });
+  }
+
+  if (new Date() > result.expiresAt) {
+    return NextResponse.json({ error: "Download link expired" }, { status: 410 });
+  }
+
+  if (!result.fileUrl) {
+    return NextResponse.json({ error: "File not available" }, { status: 404 });
+  }
+
+  // Increment download count
+  await db
+    .update(downloadTokens)
+    .set({ downloadCount: result.downloadCount + 1 })
+    .where(eq(downloadTokens.id, result.tokenId));
+
+  // fileUrl is the R2 object key
+  const presignedUrl = await getDownloadUrl(result.fileUrl);
+  return NextResponse.redirect(presignedUrl);
+}

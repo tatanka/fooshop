@@ -3,6 +3,7 @@ import { creators, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { BuyButton } from "@/components/buy-button";
 
 interface Props {
   params: Promise<{ slug: string; productSlug: string }>;
@@ -91,9 +92,10 @@ export default async function ProductPage({ params }: Props) {
         <span className="text-3xl font-bold">
           ${(product.priceCents / 100).toFixed(2)}
         </span>
-        <button className="bg-black text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors">
-          Buy Now
-        </button>
+        <BuyButton
+          productId={product.id}
+          hasStripe={!!creator.stripeConnectId}
+        />
       </div>
       <footer className="mt-16 text-sm text-gray-400">
         Sold by{" "}

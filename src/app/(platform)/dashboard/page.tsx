@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { creators, products, orders } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { StripeCTA } from "@/components/stripe-cta";
+import { StripeToast } from "@/components/stripe-toast";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -18,30 +20,31 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
-  const [stats] = await db
-    .select({
-      totalProducts: sql<number>`count(distinct ${products.id})`,
-    })
-    .from(products)
-    .where(eq(products.creatorId, creator.id));
-
-  const [orderStats] = await db
-    .select({
-      totalOrders: sql<number>`count(*)`,
-      totalRevenue: sql<number>`coalesce(sum(${orders.amountCents} - ${orders.platformFeeCents}), 0)`,
-    })
-    .from(orders)
-    .where(eq(orders.creatorId, creator.id));
-
-  const recentOrders = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.creatorId, creator.id))
-    .orderBy(desc(orders.createdAt))
-    .limit(5);
+  const [[stats], [orderStats], recentOrders] = await Promise.all([
+    db
+      .select({
+        totalProducts: sql<number>`count(distinct ${products.id})`,
+      })
+      .from(products)
+      .where(eq(products.creatorId, creator.id)),
+    db
+      .select({
+        totalOrders: sql<number>`count(*)`,
+        totalRevenue: sql<number>`coalesce(sum(${orders.amountCents} - ${orders.platformFeeCents}), 0)`,
+      })
+      .from(orders)
+      .where(eq(orders.creatorId, creator.id)),
+    db
+      .select()
+      .from(orders)
+      .where(eq(orders.creatorId, creator.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(5),
+  ]);
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
+      <StripeToast />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -91,15 +94,18 @@ export default async function DashboardPage() {
         >
           Manage Products
         </a>
-        {!creator.stripeConnectId && (
-          <button
-            className="border px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-            id="connect-stripe"
-          >
-            Connect Stripe
-          </button>
+        {creator.stripeConnectId && (
+          <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+            Stripe connected
+          </span>
         )}
       </div>
+
+      {!creator.stripeConnectId && (
+        <div className="mt-6">
+          <StripeCTA creatorId={creator.id} />
+        </div>
+      )}
 
       {recentOrders.length > 0 && (
         <div className="mt-12">

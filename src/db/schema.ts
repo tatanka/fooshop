@@ -175,3 +175,16 @@ export const pageViews = pgTable("page_views", {
     .defaultNow()
     .notNull(),
 });
+
+export const buyIntents = pgTable("buy_intents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => products.id),
+  creatorId: uuid("creator_id")
+    .notNull()
+    .references(() => creators.id),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 interface UploadState {
   progress: number;
@@ -113,6 +113,15 @@ export function useFileUpload({ maxSizeMB, purpose = "file" }: UseFileUploadOpti
     },
     [maxSizeMB, purpose]
   );
+
+  useEffect(() => {
+    return () => {
+      if (xhrRef.current) {
+        xhrRef.current.abort();
+        xhrRef.current = null;
+      }
+    };
+  }, []);
 
   const cancel = useCallback(() => {
     if (xhrRef.current) {

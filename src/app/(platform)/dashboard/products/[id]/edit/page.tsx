@@ -4,22 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { FileDropZone } from "@/components/ui/file-drop-zone";
 import { useFileUpload } from "@/hooks/use-file-upload";
-
-const CATEGORIES = [
-  "templates",
-  "presets",
-  "luts",
-  "prompts",
-  "guides",
-  "courses",
-  "assets",
-  "other",
-];
-
-const CATEGORY_LABELS: Record<string, string> = { luts: "LUTs" };
-function categoryLabel(cat: string) {
-  return CATEGORY_LABELS[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1);
-}
+import { CATEGORIES, categoryLabel } from "@/lib/categories";
 
 function filenameFromKey(key: string | null): string | null {
   if (!key) return null;
@@ -65,14 +50,6 @@ export default function EditProductPage() {
       .catch(() => setError("Failed to load product"))
       .finally(() => setFetching(false));
   }, [id]);
-
-  async function handleFileSelect(file: File) {
-    await fileUpload.upload(file);
-  }
-
-  async function handleCoverSelect(file: File) {
-    await coverUpload.upload(file);
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -200,7 +177,7 @@ export default function EditProductPage() {
 
         <FileDropZone
           label="Product File"
-          onFileSelect={handleFileSelect}
+          onFileSelect={fileUpload.upload}
           maxSizeMB={100}
           progress={fileUpload.progress}
           isUploading={fileUpload.isUploading}
@@ -211,7 +188,7 @@ export default function EditProductPage() {
 
         <FileDropZone
           label="Cover Image"
-          onFileSelect={handleCoverSelect}
+          onFileSelect={coverUpload.upload}
           accept="image/*"
           maxSizeMB={5}
           progress={coverUpload.progress}

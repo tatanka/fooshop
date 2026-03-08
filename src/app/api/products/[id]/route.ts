@@ -69,12 +69,16 @@ export async function PUT(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Clean up old R2 files if being replaced
+  // Clean up old R2 files if being replaced (parallel, fire-and-forget)
+  const cleanups: Promise<void>[] = [];
   if (body.fileUrl && current.fileUrl && body.fileUrl !== current.fileUrl) {
-    await deleteObject(current.fileUrl).catch(() => {});
+    cleanups.push(deleteObject(current.fileUrl).catch(() => {}));
   }
   if (body.coverImageUrl && current.coverImageUrl && body.coverImageUrl !== current.coverImageUrl) {
-    await deleteObject(current.coverImageUrl).catch(() => {});
+    cleanups.push(deleteObject(current.coverImageUrl).catch(() => {}));
+  }
+  if (cleanups.length > 0) {
+    await Promise.all(cleanups);
   }
 
   const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = body;

@@ -21,31 +21,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Creator not found" }, { status: 404 });
   }
 
-  let accountId = creator.stripeConnectId;
+  try {
+    let accountId = creator.stripeConnectId;
 
-  if (!accountId) {
-    const account = await getStripe().accounts.create({
-      type: "express",
-      email: creator.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
+    if (!accountId) {
+      const account = await getStripe().accounts.create({
+        type: "express",
+        email: creator.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      });
+      accountId = account.id;
+
+      await db
+        .update(creators)
+        .set({ stripeConnectId: accountId })
+        .where(eq(creators.id, creator.id));
+    }
+
+    const accountLink = await getStripe().accountLinks.create({
+      account: accountId,
+      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=connected`,
+      type: "account_onboarding",
     });
-    accountId = account.id;
 
-    await db
-      .update(creators)
-      .set({ stripeConnectId: accountId })
-      .where(eq(creators.id, creator.id));
+    return NextResponse.json({ url: accountLink.url });
+  } catch (err) {
+    console.error("Stripe Connect error:", err);
+    const message = err instanceof Error ? err.message : "Stripe error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const accountLink = await getStripe().accountLinks.create({
-    account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-    type: "account_onboarding",
-  });
-
-  return NextResponse.json({ url: accountLink.url });
 }

@@ -7,6 +7,8 @@ interface BuyButtonProps {
   hasStripe: boolean;
 }
 
+const GENERIC_ERROR = "Something went wrong. Please try again.";
+
 export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,14 +26,14 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error ?? "Something went wrong. Please try again.");
+          setError(data.error ?? GENERIC_ERROR);
           return;
         }
         if (data.url) {
           window.location.href = data.url;
           return;
         }
-        setError("Something went wrong. Please try again.");
+        setError(GENERIC_ERROR);
       } catch {
         setError("Connection failed. Please check your internet and try again.");
       } finally {

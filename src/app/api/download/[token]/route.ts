@@ -34,13 +34,14 @@ export async function GET(
     return NextResponse.json({ error: "File not available" }, { status: 404 });
   }
 
-  // Increment download count
-  await db
-    .update(downloadTokens)
-    .set({ downloadCount: sql`${downloadTokens.downloadCount} + 1` })
-    .where(eq(downloadTokens.id, result.tokenId));
+  // Increment download count and generate presigned URL in parallel
+  const [, presignedUrl] = await Promise.all([
+    db
+      .update(downloadTokens)
+      .set({ downloadCount: sql`${downloadTokens.downloadCount} + 1` })
+      .where(eq(downloadTokens.id, result.tokenId)),
+    getDownloadUrl(result.fileUrl),
+  ]);
 
-  // fileUrl is the R2 object key
-  const presignedUrl = await getDownloadUrl(result.fileUrl);
   return NextResponse.redirect(presignedUrl);
 }

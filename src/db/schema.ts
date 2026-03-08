@@ -159,7 +159,7 @@ export const orders = pgTable("orders", {
   buyerName: text("buyer_name"),
   amountCents: integer("amount_cents").notNull(),
   platformFeeCents: integer("platform_fee_cents").notNull(),
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id").unique(),
   status: orderStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

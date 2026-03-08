@@ -23,6 +23,11 @@ export async function POST(req: NextRequest) {
     const session = event.data.object;
     const { productId, creatorId } = session.metadata!;
 
+    if (!session.payment_intent) {
+      console.error("Webhook: checkout.session.completed missing payment_intent", { sessionId: session.id });
+      return NextResponse.json({ received: true });
+    }
+
     // Idempotency: skip if already processed
     const existing = await db
       .select({ id: orders.id })

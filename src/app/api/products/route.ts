@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
       priceCents: body.priceCents,
       category: body.category,
       status: body.status ?? "published",
+      fileUrl: body.fileUrl ?? null,
+      coverImageUrl: body.coverImageUrl ?? null,
     })
     .returning();
 

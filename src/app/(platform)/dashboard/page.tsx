@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { creators, products, orders } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { StripeCTA } from "@/components/stripe-cta";
 import { StripeToast } from "@/components/stripe-toast";
 
@@ -121,7 +122,12 @@ export default async function DashboardPage() {
 
       {recentOrders.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-semibold">Recent Orders</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Recent Orders</h2>
+            <Link href="/dashboard/orders" className="text-sm underline text-gray-500">
+              View all orders
+            </Link>
+          </div>
           <div className="mt-4 border rounded-lg divide-y">
             {recentOrders.map((order) => (
               <div key={order.id} className="p-4 flex justify-between">

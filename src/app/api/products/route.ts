@@ -1,20 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { products, creators } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { products, creators, pageViews } from "@/db/schema";
+import { eq, and, or, ilike, lte } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
+  const q = searchParams.get("q");
+  const maxPrice = searchParams.get("maxPrice");
+  const source = searchParams.get("source") ?? "web";
 
-  const where = category
-    ? and(eq(products.status, "published"), eq(products.category, category))
-    : eq(products.status, "published");
+  const conditions = [eq(products.status, "published")];
 
-  const results = await db.select().from(products).where(where).limit(50);
+  if (category) {
+    conditions.push(eq(products.category, category));
+  }
+  if (q) {
+    conditions.push(
+      or(
+        ilike(products.title, `%${q}%`),
+        ilike(products.description, `%${q}%`)
+      )!
+    );
+  }
+  if (maxPrice) {
+    conditions.push(lte(products.priceCents, parseInt(maxPrice, 10)));
+  }
 
-  return NextResponse.json(results);
+  const results = await db
+    .select({
+      product: products,
+      creatorSlug: creators.slug,
+    })
+    .from(products)
+    .innerJoin(creators, eq(products.creatorId, creators.id))
+    .where(and(...conditions))
+    .limit(50);
+
+  if (q) {
+    await db.insert(pageViews).values({ source });
+  }
+
+  return NextResponse.json(
+    results.map(({ product, creatorSlug }) => ({
+      ...product,
+      creatorSlug,
+    }))
+  );
 }
 
 export async function POST(req: NextRequest) {

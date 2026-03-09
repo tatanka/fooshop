@@ -5,7 +5,7 @@ import { products, creators } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
-  const { productId } = await req.json();
+  const { productId, source } = await req.json();
 
   const product = await db
     .select()
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         productId: product.id,
         creatorId: creator.id,
+        source: source ?? "web",
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/${creator.slug}/${product.slug}`,

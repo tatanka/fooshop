@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
+import { r2PublicUrl } from "@/lib/r2-url";
 
 // Exclude "other" from explore page navigation
 const EXPLORE_CATEGORIES = CATEGORIES.filter((c) => c !== "other");
@@ -61,9 +62,9 @@ export default async function ExplorePage() {
             href={`/${creatorSlug}/${product.slug}`}
             className="block border rounded-lg p-6 hover:shadow-lg transition-shadow"
           >
-            {product.coverImageUrl && (
+            {r2PublicUrl(product.coverImageUrl) && (
               <img
-                src={product.coverImageUrl}
+                src={r2PublicUrl(product.coverImageUrl)!}
                 alt={product.title}
                 className="w-full rounded mb-4"
               />

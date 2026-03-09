@@ -10,12 +10,11 @@ export const r2 = new S3Client({
   },
 });
 
-export async function getUploadUrl(key: string, contentType: string, maxContentLength?: number) {
+export async function getUploadUrl(key: string, contentType: string) {
   const command = new PutObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME!,
     Key: key,
     ContentType: contentType,
-    ...(maxContentLength ? { ContentLength: maxContentLength } : {}),
   });
   return getSignedUrl(r2, command, { expiresIn: 3600 });
 }

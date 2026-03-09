@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const maxBytes = maxMB * 1024 * 1024;
 
   const key = `products/${session.user.id}/${randomUUID()}/${safeName}`;
-  const uploadUrl = await getUploadUrl(key, contentType, maxBytes);
+  const uploadUrl = await getUploadUrl(key, contentType);
 
   return NextResponse.json({ uploadUrl, key, maxSizeBytes: maxBytes });
 }

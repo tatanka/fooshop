@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BuyButton } from "@/components/buy-button";
+import { r2PublicUrl } from "@/lib/r2-url";
 
 interface Props {
   params: Promise<{ slug: string; productSlug: string }>;
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: product.title,
       description: product.description,
-      images: product.coverImageUrl ? [product.coverImageUrl] : [],
+      images: r2PublicUrl(product.coverImageUrl) ? [r2PublicUrl(product.coverImageUrl)!] : [],
     },
   };
 }
@@ -60,7 +61,7 @@ export default async function ProductPage({ params }: Props) {
     "@type": "Product",
     name: product.title,
     description: product.description,
-    image: product.coverImageUrl ?? undefined,
+    image: r2PublicUrl(product.coverImageUrl) ?? undefined,
     offers: {
       "@type": "Offer",
       price: (product.priceCents / 100).toFixed(2),
@@ -79,9 +80,9 @@ export default async function ProductPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {product.coverImageUrl && (
+      {r2PublicUrl(product.coverImageUrl) && (
         <img
-          src={product.coverImageUrl}
+          src={r2PublicUrl(product.coverImageUrl)!}
           alt={product.title}
           className="w-full rounded-lg mb-8"
         />

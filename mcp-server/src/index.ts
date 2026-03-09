@@ -83,7 +83,7 @@ server.tool(
     slug: z.string().describe("Product slug (from search results)"),
   },
   async ({ slug }) => {
-    const res = await fetch(`${API_URL}/api/products/${slug}?source=mcp`);
+    const res = await fetch(`${API_URL}/api/products/by-slug/${slug}?source=mcp`);
     if (!res.ok) {
       return {
         content: [{ type: "text" as const, text: "Product not found." }],

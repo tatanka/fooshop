@@ -48,14 +48,14 @@ export default function EditStorePage() {
 
   if (fetching) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        <p className="text-gray-400">Loading...</p>
+      <main className="max-w-2xl mx-auto px-4 py-16">
+        <p className="text-muted">Loading...</p>
       </main>
     );
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
+    <main className="max-w-2xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold">Edit Store</h1>
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <div>
@@ -65,7 +65,7 @@ export default function EditStorePage() {
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
             required
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -75,7 +75,7 @@ export default function EditStorePage() {
             value={storeDescription}
             onChange={(e) => setStoreDescription(e.target.value)}
             rows={4}
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black resize-none"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
           />
         </div>
 
@@ -85,13 +85,13 @@ export default function EditStorePage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+            className="bg-accent text-white px-8 py-3 rounded-full font-semibold hover:opacity-85 transition-colors disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
           <a
             href="/dashboard"
-            className="border px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            className="border px-8 py-3 rounded-full font-semibold hover:bg-paper/50 transition-colors"
           >
             Cancel
           </a>
@@ -99,7 +99,7 @@ export default function EditStorePage() {
 
         <a
           href="/dashboard/store/theme"
-          className="mt-4 inline-block text-sm text-gray-500 hover:text-black underline transition-colors"
+          className="mt-4 inline-block text-sm text-muted hover:text-ink underline transition-colors"
         >
           Customize theme
         </a>

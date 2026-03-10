@@ -93,7 +93,7 @@ export default function ThemeEditorPage() {
   if (fetching) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Loading theme editor...</p>
+        <p className="text-muted">Loading theme editor...</p>
       </div>
     );
   }
@@ -113,14 +113,14 @@ export default function ThemeEditorPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">AI Theme Generation</h2>
           <textarea
-            className="w-full rounded-md border border-gray-300 p-3 text-sm"
+            className="w-full rounded-lg border border-border p-3 text-sm"
             rows={3}
             placeholder="Describe the look you want..."
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
           />
           <button
-            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-85 disabled:opacity-50"
             onClick={handleGenerate}
             disabled={generating || !aiPrompt.trim()}
           >
@@ -137,10 +137,10 @@ export default function ThemeEditorPage() {
                 type="color"
                 value={theme[key]}
                 onChange={(e) => updateTheme(key, e.target.value)}
-                className="h-8 w-8 cursor-pointer rounded border border-gray-300"
+                className="h-8 w-8 cursor-pointer rounded border border-border"
               />
               <label className="text-sm font-medium">{label}</label>
-              <span className="ml-auto text-xs text-gray-500">
+              <span className="ml-auto text-xs text-muted">
                 {theme[key]}
               </span>
             </div>
@@ -154,7 +154,7 @@ export default function ThemeEditorPage() {
           <div className="space-y-1">
             <label className="text-sm font-medium">Font Family</label>
             <select
-              className="w-full rounded-md border border-gray-300 p-2 text-sm"
+              className="w-full rounded-lg border border-border p-2 text-sm"
               value={theme.fontFamily}
               onChange={(e) =>
                 updateTheme(
@@ -172,7 +172,7 @@ export default function ThemeEditorPage() {
           <div className="space-y-1">
             <label className="text-sm font-medium">Hero Style</label>
             <select
-              className="w-full rounded-md border border-gray-300 p-2 text-sm"
+              className="w-full rounded-lg border border-border p-2 text-sm"
               value={theme.heroStyle}
               onChange={(e) =>
                 updateTheme(
@@ -190,7 +190,7 @@ export default function ThemeEditorPage() {
           <div className="space-y-1">
             <label className="text-sm font-medium">Layout</label>
             <select
-              className="w-full rounded-md border border-gray-300 p-2 text-sm"
+              className="w-full rounded-lg border border-border p-2 text-sm"
               value={theme.layout}
               onChange={(e) =>
                 updateTheme(
@@ -209,7 +209,7 @@ export default function ThemeEditorPage() {
         {/* Save / Cancel */}
         <div className="flex gap-3 pt-4">
           <button
-            className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-85 disabled:opacity-50"
             onClick={handleSave}
             disabled={saving}
           >
@@ -217,14 +217,14 @@ export default function ThemeEditorPage() {
           </button>
           <a
             href="/dashboard/store"
-            className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-xl border border-border px-4 py-2 text-center text-sm font-medium text-muted hover:bg-paper/50"
           >
             Cancel
           </a>
         </div>
       </div>
 
-      <div className="w-[60%] bg-gray-100">
+      <div className="w-[60%] bg-paper">
         {previewUrl && (
           <iframe
             src={previewUrl}

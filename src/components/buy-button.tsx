@@ -5,11 +5,12 @@ import { useState } from "react";
 interface BuyButtonProps {
   productId: string;
   hasStripe: boolean;
+  primaryColor?: string;
 }
 
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 
-export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
+export function BuyButton({ productId, hasStripe, primaryColor }: BuyButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +58,12 @@ export function BuyButton({ productId, hasStripe }: BuyButtonProps) {
         <button
           onClick={handleClick}
           disabled={loading}
-          className="bg-black text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+          className="text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors disabled:opacity-50"
+          style={{
+            backgroundColor: primaryColor ?? "#000000",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
         >
           {loading ? "Loading..." : "Buy Now"}
         </button>

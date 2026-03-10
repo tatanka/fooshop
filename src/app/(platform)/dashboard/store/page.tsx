@@ -96,6 +96,13 @@ export default function EditStorePage() {
             Cancel
           </a>
         </div>
+
+        <a
+          href="/dashboard/store/theme"
+          className="mt-4 inline-block text-sm text-gray-500 hover:text-black underline transition-colors"
+        >
+          Customize theme
+        </a>
       </form>
     </main>
   );

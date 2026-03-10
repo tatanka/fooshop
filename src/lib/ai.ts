@@ -74,3 +74,38 @@ Choose theme colors that form a cohesive palette. The backgroundColor should be 
     message.content[0].type === "text" ? message.content[0].text : "";
   return JSON.parse(text) as GeneratedStore;
 }
+
+export async function generateTheme(prompt: string): Promise<StoreTheme> {
+  const client = getAnthropicClient();
+
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 500,
+    messages: [
+      {
+        role: "user",
+        content: `You are a brand designer. Based on the creator's description, generate a cohesive store theme.
+
+Creator says: "${prompt}"
+
+Respond with ONLY valid JSON (no markdown, no backticks):
+{
+  "primaryColor": "#hex dark enough for white text overlay",
+  "secondaryColor": "#hex dark enough for white text overlay",
+  "backgroundColor": "#hex subtle tint, not pure white",
+  "textColor": "#hex text color",
+  "accentColor": "#hex accent color",
+  "fontFamily": "sans | serif | mono",
+  "heroStyle": "gradient | solid | minimal",
+  "layout": "grid | featured | list"
+}
+
+Choose colors that form a cohesive palette matching the described vibe. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's brand.`,
+      },
+    ],
+  });
+
+  const text =
+    message.content[0].type === "text" ? message.content[0].text : "";
+  return JSON.parse(text) as StoreTheme;
+}

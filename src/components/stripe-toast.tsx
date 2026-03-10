@@ -18,7 +18,7 @@ export function StripeToast() {
   if (!show) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
+    <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-6 py-3 rounded-xl shadow-lg">
       Stripe collegato con successo!
     </div>
   );

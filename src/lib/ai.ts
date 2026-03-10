@@ -71,7 +71,9 @@ Respond with ONLY valid JSON (no markdown, no backticks):
   }
 }
 
-Generate 2-4 suggested products based on what they sell. Price realistically for digital products.`,
+Generate 2-4 suggested products based on what they sell. Price realistically for digital products.
+
+Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). Pick fontFamily, heroStyle, and layout that match the creator's niche.`,
       },
     ],
   });

@@ -32,6 +32,7 @@ export default function ThemeEditorPage() {
   const [generating, setGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [error, setError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
     async function fetchStore() {
@@ -50,6 +51,14 @@ export default function ThemeEditorPage() {
     fetchStore();
   }, []);
 
+  useEffect(() => {
+    if (!slug) return;
+    const timeout = setTimeout(() => {
+      setPreviewUrl(`/${slug}?themePreview=${btoa(JSON.stringify(theme))}`);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [theme, slug]);
+
   async function handleGenerate() {
     setGenerating(true);
     setError("");
@@ -61,7 +70,7 @@ export default function ThemeEditorPage() {
       });
       if (!res.ok) throw new Error("Failed to generate theme");
       const data = await res.json();
-      setTheme(data);
+      setTheme({ ...DEFAULT_THEME, ...data.theme });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate theme");
     } finally {
@@ -82,6 +91,7 @@ export default function ThemeEditorPage() {
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save theme");
+    } finally {
       setSaving(false);
     }
   }
@@ -97,10 +107,6 @@ export default function ThemeEditorPage() {
       </div>
     );
   }
-
-  const previewUrl = slug
-    ? `/${slug}?themePreview=${btoa(JSON.stringify(theme))}`
-    : "";
 
   return (
     <div className="flex min-h-screen">
@@ -231,7 +237,6 @@ export default function ThemeEditorPage() {
       <div className="w-[60%] bg-gray-100">
         {previewUrl && (
           <iframe
-            key={JSON.stringify(theme)}
             src={previewUrl}
             className="w-full h-full border-0"
             title="Store preview"

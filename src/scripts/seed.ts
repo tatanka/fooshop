@@ -234,10 +234,10 @@ async function seed() {
   await db.insert(orders).values(seedOrders);
 
   console.log("Seed complete!");
-  console.log("  Users: 2");
-  console.log("  Creators: 2");
-  console.log("  Products: 7");
-  console.log("  Orders: 6");
+  console.log(`  Users: ${seedUsers.length}`);
+  console.log(`  Creators: ${seedCreators.length}`);
+  console.log(`  Products: ${seedProducts.length}`);
+  console.log(`  Orders: ${seedOrders.length}`);
 
   process.exit(0);
 }

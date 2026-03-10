@@ -16,21 +16,21 @@ export async function StripeCTA({ creatorId }: StripeCTAProps) {
   const intentCount = Number(count);
 
   return (
-    <div className="border rounded-lg p-6">
-      {intentCount > 0 ? (
-        <div className="mb-4">
-          <p className="text-red-600 font-bold">
-            Stai perdendo vendite!
-          </p>
-          <p className="text-sm text-red-600 mt-1">
-            {intentCount} {intentCount === 1 ? "persona ha" : "persone hanno"} provato ad acquistare i tuoi prodotti
-          </p>
-        </div>
-      ) : (
-        <p className="text-gray-600 mb-4">
-          Collega Stripe per ricevere pagamenti
-        </p>
-      )}
+    <div className="border border-accent/30 bg-accent/5 rounded-xl p-5 flex items-center justify-between gap-4">
+      <div>
+        {intentCount > 0 ? (
+          <>
+            <p className="font-semibold text-accent">
+              Stai perdendo vendite!
+            </p>
+            <p className="text-sm text-muted mt-0.5">
+              {intentCount} {intentCount === 1 ? "persona ha" : "persone hanno"} provato ad acquistare i tuoi prodotti
+            </p>
+          </>
+        ) : (
+          <p className="text-muted">Collega Stripe per ricevere pagamenti</p>
+        )}
+      </div>
       <ConnectStripeButton />
     </div>
   );

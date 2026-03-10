@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { StoreTheme } from "@/db/schema";
 
 let _anthropic: Anthropic | null = null;
 
@@ -19,16 +20,7 @@ interface GeneratedStore {
     category: string;
     tags: string[];
   }[];
-  theme: {
-    primaryColor: string;
-    secondaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    accentColor: string;
-    fontFamily: "sans" | "serif" | "mono";
-    heroStyle: "gradient" | "solid" | "minimal";
-    layout: "grid" | "featured" | "list";
-  };
+  theme: StoreTheme;
 }
 
 export async function generateStore(
@@ -73,7 +65,7 @@ Respond with ONLY valid JSON (no markdown, no backticks):
 
 Generate 2-4 suggested products based on what they sell. Price realistically for digital products.
 
-Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). Pick fontFamily, heroStyle, and layout that match the creator's niche.`,
+Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's niche.`,
       },
     ],
   });

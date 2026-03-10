@@ -1,20 +1,10 @@
 import { db } from "@/db";
 import { creators, products } from "@/db/schema";
+import type { StoreTheme } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { r2PublicUrl } from "@/lib/r2-url";
-
-type StoreTheme = {
-  primaryColor: string;
-  secondaryColor: string;
-  backgroundColor: string;
-  textColor: string;
-  accentColor: string;
-  fontFamily: "sans" | "serif" | "mono";
-  heroStyle: "gradient" | "solid" | "minimal";
-  layout: "grid" | "featured" | "list";
-};
 
 const DEFAULT_THEME: StoreTheme = {
   primaryColor: "#2563eb",
@@ -136,7 +126,7 @@ function ProductLayout({
   products: (typeof products.$inferSelect)[];
   slug: string;
   theme: StoreTheme;
-  layout: string;
+  layout: StoreTheme["layout"];
 }) {
   if (layout === "featured" && productList.length > 0) {
     const [featured, ...rest] = productList;
@@ -149,7 +139,7 @@ function ProductLayout({
           style={{
             borderColor: theme.accentColor,
             borderWidth: "1px",
-            background: `linear-gradient(135deg, ${theme.primaryColor}10, ${theme.secondaryColor}10)`,
+            background: `linear-gradient(135deg, color-mix(in srgb, ${theme.primaryColor} 10%, transparent), color-mix(in srgb, ${theme.secondaryColor} 10%, transparent))`,
           }}
         >
           <div className="flex flex-col md:flex-row gap-6">
@@ -280,17 +270,10 @@ export default async function StorePage({ params }: Props) {
   return (
     <div
       className={`min-h-screen ${fontClass}`}
-      style={
-        {
-          "--store-primary": theme.primaryColor,
-          "--store-secondary": theme.secondaryColor,
-          "--store-bg": theme.backgroundColor,
-          "--store-text": theme.textColor,
-          "--store-accent": theme.accentColor,
-          backgroundColor: theme.backgroundColor,
-          color: theme.textColor,
-        } as React.CSSProperties
-      }
+      style={{
+        backgroundColor: theme.backgroundColor,
+        color: theme.textColor,
+      }}
     >
       <main className="max-w-5xl mx-auto px-4 py-12">
         <script

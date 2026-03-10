@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { StoreTheme } from "@/db/schema";
 
 interface GeneratedStore {
   storeName: string;
@@ -13,16 +14,7 @@ interface GeneratedStore {
     category: string;
     tags: string[];
   }[];
-  theme: {
-    primaryColor: string;
-    secondaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    accentColor: string;
-    fontFamily: "sans" | "serif" | "mono";
-    heroStyle: "gradient" | "solid" | "minimal";
-    layout: "grid" | "featured" | "list";
-  };
+  theme: StoreTheme;
 }
 
 export default function OnboardingForm() {

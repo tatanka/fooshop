@@ -92,6 +92,17 @@ export const authenticators = pgTable(
 
 // ─── Business tables ────────────────────────────────────────────────────────
 
+export type StoreTheme = {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  fontFamily: "sans" | "serif" | "mono";
+  heroStyle: "gradient" | "solid" | "minimal";
+  layout: "grid" | "featured" | "list";
+};
+
 export const productStatusEnum = pgEnum("product_status", [
   "draft",
   "published",
@@ -114,16 +125,7 @@ export const creators = pgTable("creators", {
   stripeConnectId: text("stripe_connect_id"),
   storeName: text("store_name"),
   storeDescription: text("store_description"),
-  storeTheme: jsonb("store_theme").$type<{
-    primaryColor: string;
-    secondaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    accentColor: string;
-    fontFamily: "sans" | "serif" | "mono";
-    heroStyle: "gradient" | "solid" | "minimal";
-    layout: "grid" | "featured" | "list";
-  }>(),
+  storeTheme: jsonb("store_theme").$type<StoreTheme>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

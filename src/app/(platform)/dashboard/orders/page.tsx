@@ -36,65 +36,68 @@ export default async function OrdersPage() {
     .orderBy(desc(orders.createdAt));
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-center">
+    <main className="max-w-5xl mx-auto px-4 py-16">
+      <div className="flex justify-between items-center animate-fade-up">
         <div>
           <h1 className="text-3xl font-bold">Orders</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted mt-1">
             {orderRows.length} {orderRows.length === 1 ? "order" : "orders"}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <a
             href="/api/orders/export?format=csv"
-            className="bg-black text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+            className="border border-border px-4 py-2 rounded-full text-sm font-semibold hover:border-ink transition-colors"
           >
             Export CSV
           </a>
           <Link
             href="/dashboard"
-            className="text-sm underline text-gray-500"
+            className="text-sm text-muted hover:text-ink transition-colors"
           >
-            Back to dashboard
+            &larr; Dashboard
           </Link>
         </div>
       </div>
 
       {orderRows.length === 0 ? (
-        <p className="text-gray-500 mt-8">No orders yet.</p>
+        <p className="text-muted mt-12 text-center">No orders yet.</p>
       ) : (
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="mt-8 overflow-x-auto animate-fade-up stagger-2">
+          <table className="w-full text-left">
             <thead>
-              <tr className="border-b text-sm text-gray-500">
-                <th className="py-3 pr-4 font-medium">Buyer</th>
-                <th className="py-3 pr-4 font-medium">Product</th>
-                <th className="py-3 pr-4 font-medium">Amount</th>
-                <th className="py-3 pr-4 font-medium">Net</th>
-                <th className="py-3 pr-4 font-medium">Status</th>
-                <th className="py-3 font-medium">Date</th>
+              <tr className="border-b border-border">
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Buyer</th>
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Product</th>
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Amount</th>
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Net</th>
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Status</th>
+                <th className="py-3 text-xs uppercase tracking-wider text-muted font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
               {orderRows.map((order) => (
-                <tr key={order.id} className="border-b">
+                <tr
+                  key={order.id}
+                  className="border-b border-border hover:bg-paper/50 transition-colors"
+                >
                   <td className="py-3 pr-4">
-                    <p className="font-medium">{order.buyerEmail}</p>
+                    <p className="font-medium text-sm">{order.buyerEmail}</p>
                     {order.buyerName && (
-                      <p className="text-sm text-gray-500">{order.buyerName}</p>
+                      <p className="text-xs text-muted">{order.buyerName}</p>
                     )}
                   </td>
-                  <td className="py-3 pr-4">{order.productTitle}</td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4 text-sm">{order.productTitle}</td>
+                  <td className="py-3 pr-4 text-sm font-medium">
                     ${(order.amountCents / 100).toFixed(2)}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4 text-sm">
                     ${((order.amountCents - order.platformFeeCents) / 100).toFixed(2)}
                   </td>
                   <td className="py-3 pr-4">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="py-3">
+                  <td className="py-3 text-sm text-muted">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -111,14 +114,14 @@ type OrderStatus = (typeof import("@/db/schema").orderStatusEnum.enumValues)[num
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   const styles: Record<OrderStatus, string> = {
-    completed: "bg-green-100 text-green-800",
-    refunded: "bg-red-100 text-red-800",
-    pending: "bg-yellow-100 text-yellow-800",
+    completed: "bg-green-50 text-green-700",
+    refunded: "bg-red-50 text-red-700",
+    pending: "bg-yellow-50 text-yellow-700",
   };
 
   return (
     <span
-      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
+      className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${styles[status]}`}
     >
       {status}
     </span>

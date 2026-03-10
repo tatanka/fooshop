@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { creators, products, orders } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { StripeCTA } from "@/components/stripe-cta";
 import { StripeToast } from "@/components/stripe-toast";
 
@@ -20,19 +21,16 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
-  // Check if Stripe Connect account is fully set up
-  let stripeReady = false;
-  if (creator.stripeConnectId) {
-    try {
-      const { getStripe } = await import("@/lib/stripe");
-      const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
-      stripeReady = !!account.charges_enabled;
-    } catch {
-      // Stripe API error — treat as not ready
-    }
-  }
+  // Run Stripe check and DB queries in parallel
+  const stripeCheckPromise = creator.stripeConnectId
+    ? import("@/lib/stripe")
+        .then(({ getStripe }) => getStripe().accounts.retrieve(creator.stripeConnectId!))
+        .then((account) => !!account.charges_enabled)
+        .catch(() => false)
+    : Promise.resolve(false);
 
-  const [[stats], [orderStats], recentOrders] = await Promise.all([
+  const [stripeReady, [stats], [orderStats], recentOrders] = await Promise.all([
+    stripeCheckPromise,
     db
       .select({
         totalProducts: sql<number>`count(distinct ${products.id})`,
@@ -121,7 +119,12 @@ export default async function DashboardPage() {
 
       {recentOrders.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-semibold">Recent Orders</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Recent Orders</h2>
+            <Link href="/dashboard/orders" className="text-sm underline text-gray-500">
+              View all orders
+            </Link>
+          </div>
           <div className="mt-4 border rounded-lg divide-y">
             {recentOrders.map((order) => (
               <div key={order.id} className="p-4 flex justify-between">

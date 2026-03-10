@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { StoreTheme } from "@/db/schema";
 
 interface GeneratedStore {
   storeName: string;
@@ -13,10 +14,7 @@ interface GeneratedStore {
     category: string;
     tags: string[];
   }[];
-  theme: {
-    primaryColor: string;
-    layout: string;
-  };
+  theme: StoreTheme;
 }
 
 export default function OnboardingForm() {

@@ -21,7 +21,13 @@ interface GeneratedStore {
   }[];
   theme: {
     primaryColor: string;
-    layout: string;
+    secondaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    fontFamily: "sans" | "serif" | "mono";
+    heroStyle: "gradient" | "solid" | "minimal";
+    layout: "grid" | "featured" | "list";
   };
 }
 
@@ -55,7 +61,13 @@ Respond with ONLY valid JSON (no markdown, no backticks):
   ],
   "theme": {
     "primaryColor": "#hex color that fits the brand",
-    "layout": "grid"
+    "secondaryColor": "#hex secondary color",
+    "backgroundColor": "#hex background color",
+    "textColor": "#hex text color",
+    "accentColor": "#hex accent color",
+    "fontFamily": "sans | serif | mono",
+    "heroStyle": "gradient | solid | minimal",
+    "layout": "grid | featured | list"
   }
 }
 

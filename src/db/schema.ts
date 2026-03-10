@@ -116,7 +116,13 @@ export const creators = pgTable("creators", {
   storeDescription: text("store_description"),
   storeTheme: jsonb("store_theme").$type<{
     primaryColor: string;
-    layout: string;
+    secondaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    fontFamily: "sans" | "serif" | "mono";
+    heroStyle: "gradient" | "solid" | "minimal";
+    layout: "grid" | "featured" | "list";
   }>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

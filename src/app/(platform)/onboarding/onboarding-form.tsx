@@ -15,7 +15,13 @@ interface GeneratedStore {
   }[];
   theme: {
     primaryColor: string;
-    layout: string;
+    secondaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    fontFamily: "sans" | "serif" | "mono";
+    heroStyle: "gradient" | "solid" | "minimal";
+    layout: "grid" | "featured" | "list";
   };
 }
 

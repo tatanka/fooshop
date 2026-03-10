@@ -21,19 +21,16 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
-  // Check if Stripe Connect account is fully set up
-  let stripeReady = false;
-  if (creator.stripeConnectId) {
-    try {
-      const { getStripe } = await import("@/lib/stripe");
-      const account = await getStripe().accounts.retrieve(creator.stripeConnectId);
-      stripeReady = !!account.charges_enabled;
-    } catch {
-      // Stripe API error — treat as not ready
-    }
-  }
+  // Run Stripe check and DB queries in parallel
+  const stripeCheckPromise = creator.stripeConnectId
+    ? import("@/lib/stripe")
+        .then(({ getStripe }) => getStripe().accounts.retrieve(creator.stripeConnectId!))
+        .then((account) => !!account.charges_enabled)
+        .catch(() => false)
+    : Promise.resolve(false);
 
-  const [[stats], [orderStats], recentOrders] = await Promise.all([
+  const [stripeReady, [stats], [orderStats], recentOrders] = await Promise.all([
+    stripeCheckPromise,
     db
       .select({
         totalProducts: sql<number>`count(distinct ${products.id})`,

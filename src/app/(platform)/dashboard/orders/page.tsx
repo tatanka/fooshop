@@ -107,8 +107,10 @@ export default async function OrdersPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
+type OrderStatus = (typeof import("@/db/schema").orderStatusEnum.enumValues)[number];
+
+function StatusBadge({ status }: { status: OrderStatus }) {
+  const styles: Record<OrderStatus, string> = {
     completed: "bg-green-100 text-green-800",
     refunded: "bg-red-100 text-red-800",
     pending: "bg-yellow-100 text-yellow-800",
@@ -116,7 +118,7 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${styles[status] ?? "bg-gray-100 text-gray-800"}`}
+      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
     >
       {status}
     </span>

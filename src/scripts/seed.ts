@@ -5,11 +5,12 @@ import { inArray } from "drizzle-orm";
 
 // ─── Deterministic IDs ──────────────────────────────────────────────────────
 
-const USER_IDS = ["seed-user-1", "seed-user-2"] as const;
+const USER_IDS = ["seed-user-1", "seed-user-2", "seed-user-3"] as const;
 
 const CREATOR_IDS = [
   "00000000-0000-0000-0000-000000000001",
   "00000000-0000-0000-0000-000000000002",
+  "00000000-0000-0000-0000-000000000003",
 ] as const;
 
 const PRODUCT_IDS = [
@@ -20,6 +21,8 @@ const PRODUCT_IDS = [
   "00000000-0000-0000-0000-100000000005",
   "00000000-0000-0000-0000-100000000006",
   "00000000-0000-0000-0000-100000000007",
+  "00000000-0000-0000-0000-100000000008",
+  "00000000-0000-0000-0000-100000000009",
 ] as const;
 
 const ORDER_IDS = [
@@ -36,6 +39,7 @@ const ORDER_IDS = [
 const seedUsers = [
   { id: USER_IDS[0], name: "Alice Demo", email: "alice@demo.test" },
   { id: USER_IDS[1], name: "Bob Demo", email: "bob@demo.test" },
+  { id: USER_IDS[2], name: "Carol Demo", email: "carol@demo.test" },
 ];
 
 const seedCreators = [
@@ -47,6 +51,16 @@ const seedCreators = [
     slug: "alice-demo",
     storeName: "Alice's Digital Shop",
     storeDescription: "Demo store for testing",
+    storeTheme: {
+      primaryColor: "#6366f1",
+      secondaryColor: "#ec4899",
+      backgroundColor: "#faf5ff",
+      textColor: "#1e1b2d",
+      accentColor: "#8b5cf6",
+      fontFamily: "sans" as const,
+      heroStyle: "gradient" as const,
+      layout: "grid" as const,
+    },
   },
   {
     id: CREATOR_IDS[1],
@@ -56,6 +70,35 @@ const seedCreators = [
     slug: "bob-demo",
     storeName: "Bob's Creative Hub",
     storeDescription: "Demo store for testing",
+    storeTheme: {
+      primaryColor: "#059669",
+      secondaryColor: "#0d9488",
+      backgroundColor: "#f0fdf4",
+      textColor: "#1a2e1a",
+      accentColor: "#10b981",
+      fontFamily: "serif" as const,
+      heroStyle: "solid" as const,
+      layout: "featured" as const,
+    },
+  },
+  {
+    id: CREATOR_IDS[2],
+    userId: USER_IDS[2],
+    email: "carol@demo.test",
+    name: "Carol Demo",
+    slug: "carol-demo",
+    storeName: "Carol's Template Studio",
+    storeDescription: "Demo store for testing",
+    storeTheme: {
+      primaryColor: "#dc2626",
+      secondaryColor: "#f97316",
+      backgroundColor: "#fffbeb",
+      textColor: "#1c1917",
+      accentColor: "#ea580c",
+      fontFamily: "mono" as const,
+      heroStyle: "minimal" as const,
+      layout: "list" as const,
+    },
   },
 ];
 
@@ -129,6 +172,27 @@ const seedProducts = [
     slug: "indie-hackers-playbook",
     description: "From idea to $10k MRR — a practical guide for solo founders.",
     priceCents: 1299,
+    category: "ebook",
+    status: "published" as const,
+  },
+  // Carol's products (2)
+  {
+    id: PRODUCT_IDS[7],
+    creatorId: CREATOR_IDS[2],
+    title: "Notion Dashboard Template",
+    slug: "notion-dashboard-template",
+    description: "An all-in-one Notion workspace for freelancers and small teams.",
+    priceCents: 1199,
+    category: "template",
+    status: "published" as const,
+  },
+  {
+    id: PRODUCT_IDS[8],
+    creatorId: CREATOR_IDS[2],
+    title: "TypeScript Design Patterns",
+    slug: "typescript-design-patterns",
+    description: "Master 20 essential design patterns with real-world TypeScript examples.",
+    priceCents: 2499,
     category: "ebook",
     status: "published" as const,
   },

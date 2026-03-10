@@ -287,16 +287,12 @@ export default async function StorePage({ params }: Props) {
           "--store-bg": theme.backgroundColor,
           "--store-text": theme.textColor,
           "--store-accent": theme.accentColor,
+          backgroundColor: theme.backgroundColor,
+          color: theme.textColor,
         } as React.CSSProperties
       }
     >
-      <main
-        className="max-w-5xl mx-auto px-4 py-12"
-        style={{
-          backgroundColor: theme.backgroundColor,
-          color: theme.textColor,
-        }}
-      >
+      <main className="max-w-5xl mx-auto px-4 py-12">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

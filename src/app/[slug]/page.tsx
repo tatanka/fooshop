@@ -19,6 +19,7 @@ const DEFAULT_THEME: StoreTheme = {
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ themePreview?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -233,8 +234,9 @@ function ProductLayout({
   );
 }
 
-export default async function StorePage({ params }: Props) {
+export default async function StorePage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { themePreview } = await searchParams;
   const creator = await db
     .select()
     .from(creators)
@@ -250,7 +252,18 @@ export default async function StorePage({ params }: Props) {
       and(eq(products.creatorId, creator.id), eq(products.status, "published"))
     );
 
-  const theme: StoreTheme = { ...DEFAULT_THEME, ...creator.storeTheme };
+  let theme: StoreTheme = { ...DEFAULT_THEME, ...creator.storeTheme };
+
+  if (themePreview) {
+    try {
+      const previewTheme = JSON.parse(
+        Buffer.from(themePreview, "base64").toString("utf-8")
+      );
+      theme = { ...DEFAULT_THEME, ...previewTheme };
+    } catch {
+      // Invalid preview param — ignore, use DB theme
+    }
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",

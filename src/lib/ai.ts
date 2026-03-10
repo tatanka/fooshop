@@ -10,6 +10,17 @@ function getAnthropicClient(): Anthropic {
   return _anthropic;
 }
 
+const THEME_FIELDS_PROMPT = `"primaryColor": "#hex color that fits the brand",
+  "secondaryColor": "#hex secondary color",
+  "backgroundColor": "#hex background color",
+  "textColor": "#hex text color",
+  "accentColor": "#hex accent color",
+  "fontFamily": "sans | serif | mono",
+  "heroStyle": "gradient | solid | minimal",
+  "layout": "grid | featured | list"`;
+
+const THEME_GUIDANCE = `Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's niche.`;
+
 interface GeneratedStore {
   storeName: string;
   storeDescription: string;
@@ -52,20 +63,13 @@ Respond with ONLY valid JSON (no markdown, no backticks):
     }
   ],
   "theme": {
-    "primaryColor": "#hex color that fits the brand",
-    "secondaryColor": "#hex secondary color",
-    "backgroundColor": "#hex background color",
-    "textColor": "#hex text color",
-    "accentColor": "#hex accent color",
-    "fontFamily": "sans | serif | mono",
-    "heroStyle": "gradient | solid | minimal",
-    "layout": "grid | featured | list"
+    ${THEME_FIELDS_PROMPT}
   }
 }
 
 Generate 2-4 suggested products based on what they sell. Price realistically for digital products.
 
-Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's niche.`,
+${THEME_GUIDANCE}`,
       },
     ],
   });
@@ -90,17 +94,10 @@ Creator says: "${prompt}"
 
 Respond with ONLY valid JSON (no markdown, no backticks):
 {
-  "primaryColor": "#hex dark enough for white text overlay",
-  "secondaryColor": "#hex dark enough for white text overlay",
-  "backgroundColor": "#hex subtle tint, not pure white",
-  "textColor": "#hex text color",
-  "accentColor": "#hex accent color",
-  "fontFamily": "sans | serif | mono",
-  "heroStyle": "gradient | solid | minimal",
-  "layout": "grid | featured | list"
+  ${THEME_FIELDS_PROMPT}
 }
 
-Choose colors that form a cohesive palette matching the described vibe. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's brand.`,
+${THEME_GUIDANCE}`,
       },
     ],
   });

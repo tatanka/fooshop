@@ -103,6 +103,17 @@ export type StoreTheme = {
   layout: "grid" | "featured" | "list";
 };
 
+export const DEFAULT_THEME: StoreTheme = {
+  primaryColor: "#2563eb",
+  secondaryColor: "#7c3aed",
+  backgroundColor: "#ffffff",
+  textColor: "#1f2937",
+  accentColor: "#3b82f6",
+  fontFamily: "sans",
+  heroStyle: "minimal",
+  layout: "grid",
+};
+
 export const productStatusEnum = pgEnum("product_status", [
   "draft",
   "published",

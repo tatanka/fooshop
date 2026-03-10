@@ -2,18 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { DEFAULT_THEME } from "@/db/schema";
 import type { StoreTheme } from "@/db/schema";
-
-const DEFAULT_THEME: StoreTheme = {
-  primaryColor: "#2563eb",
-  secondaryColor: "#7c3aed",
-  backgroundColor: "#ffffff",
-  textColor: "#1f2937",
-  accentColor: "#3b82f6",
-  fontFamily: "sans",
-  heroStyle: "minimal",
-  layout: "grid",
-};
 
 const COLOR_FIELDS = [
   { key: "primaryColor", label: "Primary" },

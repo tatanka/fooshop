@@ -1,21 +1,10 @@
 import { db } from "@/db";
-import { creators, products } from "@/db/schema";
+import { creators, products, DEFAULT_THEME } from "@/db/schema";
 import type { StoreTheme } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { r2PublicUrl } from "@/lib/r2-url";
-
-const DEFAULT_THEME: StoreTheme = {
-  primaryColor: "#2563eb",
-  secondaryColor: "#7c3aed",
-  backgroundColor: "#ffffff",
-  textColor: "#1f2937",
-  accentColor: "#3b82f6",
-  fontFamily: "sans",
-  heroStyle: "minimal",
-  layout: "grid",
-};
 
 interface Props {
   params: Promise<{ slug: string }>;

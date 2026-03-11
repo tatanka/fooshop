@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { creators, coupons, products } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { generateCouponCode } from "@/lib/coupon";
 
 export async function GET() {
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     const product = await db
       .select({ id: products.id })
       .from(products)
-      .where(eq(products.id, productId))
+      .where(and(eq(products.id, productId), eq(products.creatorId, creator.id)))
       .then((rows) => rows[0]);
 
     if (!product) {

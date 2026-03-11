@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, calculatePlatformFee } from "@/lib/stripe";
+import { applyDiscount } from "@/lib/coupon";
 import { db } from "@/db";
-import { products, creators } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { products, creators, coupons } from "@/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
-  const { productId, source } = await req.json();
+  const { productId, couponCode, source } = await req.json();
 
   const product = await db
     .select()
@@ -39,7 +40,61 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const platformFee = calculatePlatformFee(product.priceCents);
+  // Coupon validation (if provided)
+  let finalPriceCents = product.priceCents;
+  let couponId: string | null = null;
+
+  if (couponCode) {
+    const coupon = await db
+      .select()
+      .from(coupons)
+      .where(
+        and(
+          eq(coupons.creatorId, product.creatorId),
+          eq(coupons.code, couponCode.toUpperCase().trim())
+        )
+      )
+      .then((rows) => rows[0]);
+
+    if (!coupon || !coupon.active) {
+      return NextResponse.json({ error: "Invalid coupon code" }, { status: 400 });
+    }
+
+    if (coupon.expiresAt && new Date() > coupon.expiresAt) {
+      return NextResponse.json({ error: "Coupon has expired" }, { status: 400 });
+    }
+
+    if (coupon.productId && coupon.productId !== productId) {
+      return NextResponse.json({ error: "Coupon not valid for this product" }, { status: 400 });
+    }
+
+    if (coupon.minAmountCents !== null && product.priceCents < coupon.minAmountCents) {
+      return NextResponse.json({ error: "Order does not meet minimum amount" }, { status: 400 });
+    }
+
+    // Atomically increment redemption count (prevents race conditions)
+    const updated = await db
+      .update(coupons)
+      .set({ redemptionCount: sql`${coupons.redemptionCount} + 1` })
+      .where(
+        and(
+          eq(coupons.id, coupon.id),
+          coupon.maxRedemptions !== null
+            ? sql`${coupons.redemptionCount} < ${coupon.maxRedemptions}`
+            : sql`true`
+        )
+      )
+      .returning({ id: coupons.id });
+
+    if (updated.length === 0) {
+      return NextResponse.json({ error: "Coupon has reached its usage limit" }, { status: 400 });
+    }
+
+    finalPriceCents = applyDiscount(product.priceCents, coupon.discountType, coupon.discountValue);
+    couponId = coupon.id;
+  }
+
+  const platformFee = calculatePlatformFee(finalPriceCents);
 
   try {
     const checkoutSession = await getStripe().checkout.sessions.create({
@@ -52,7 +107,7 @@ export async function POST(req: NextRequest) {
               name: product.title,
               description: product.description,
             },
-            unit_amount: product.priceCents,
+            unit_amount: finalPriceCents,
           },
           quantity: 1,
         },
@@ -67,6 +122,7 @@ export async function POST(req: NextRequest) {
         productId: product.id,
         creatorId: creator.id,
         source: source ?? "web",
+        ...(couponId && { couponId }),
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/${creator.slug}/${product.slug}`,

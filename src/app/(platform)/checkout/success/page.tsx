@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { orders, downloadTokens, products } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 
@@ -32,7 +32,12 @@ export default async function CheckoutSuccess({ searchParams }: Props) {
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.id))
     .innerJoin(downloadTokens, eq(downloadTokens.orderId, orders.id))
-    .where(eq(orders.stripePaymentIntentId, session.payment_intent as string))
+    .where(
+      and(
+        eq(orders.stripePaymentIntentId, session.payment_intent as string),
+        eq(downloadTokens.source, "web")
+      )
+    )
     .then((rows) => rows[0]);
 
   return (

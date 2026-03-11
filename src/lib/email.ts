@@ -6,9 +6,9 @@ let _mailtrap: MailtrapClient | null = null;
 
 function getMailtrap(): MailtrapClient {
   if (!_mailtrap) {
-    _mailtrap = new MailtrapClient({
-      token: process.env.MAILTRAP_API_TOKEN!,
-    });
+    const token = process.env.MAILTRAP_API_TOKEN;
+    if (!token) throw new Error("MAILTRAP_API_TOKEN is not set");
+    _mailtrap = new MailtrapClient({ token });
   }
   return _mailtrap;
 }

@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
       });
 
       // Create 72h email token + send email (outside transaction, non-blocking)
-      try {
+      if (order.buyerEmail === "unknown") {
+        console.warn("Webhook: no buyer email, skipping purchase email", { orderId: order.id });
+      } else try {
         const [emailToken] = await db.insert(downloadTokens).values({
           orderId: order.id,
           expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),

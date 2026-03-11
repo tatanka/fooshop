@@ -21,7 +21,6 @@ export default async function DashboardPage() {
 
   if (!creator) redirect("/onboarding");
 
-  // Run Stripe check and DB queries in parallel
   const stripeCheckPromise = creator.stripeConnectId
     ? import("@/lib/stripe")
         .then(({ getStripe }) => getStripe().accounts.retrieve(creator.stripeConnectId!))
@@ -52,89 +51,107 @@ export default async function DashboardPage() {
       .limit(5),
   ]);
 
+  const statCards = [
+    { label: "Products", value: Number(stats.totalProducts) },
+    { label: "Orders", value: Number(orderStats.totalOrders) },
+    {
+      label: "Revenue",
+      value: `$${(Number(orderStats.totalRevenue) / 100).toFixed(2)}`,
+    },
+  ];
+
   return (
-    <main className="max-w-4xl mx-auto px-4 py-12">
+    <main className="max-w-5xl mx-auto px-4 py-16">
       <StripeToast />
-      <div className="flex justify-between items-center">
+
+      {/* Header */}
+      <div className="flex justify-between items-start animate-fade-up">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-600 mt-1">{creator.storeName}</p>
+          <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
+          <p className="text-muted mt-1">{creator.storeName}</p>
         </div>
-        <div className="flex gap-4">
-          <a
+        <div className="flex gap-4 text-sm">
+          <Link
             href="/dashboard/store"
-            className="text-sm underline text-gray-500"
+            className="text-muted hover:text-ink transition-colors"
           >
             Edit store
-          </a>
-          <a
+          </Link>
+          <Link
             href={`/${creator.slug}`}
-            className="text-sm underline text-gray-500"
+            className="text-accent font-medium hover:opacity-80 transition-opacity"
           >
-            View store
-          </a>
+            View store &rarr;
+          </Link>
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="border rounded-lg p-6">
-          <p className="text-sm text-gray-500">Products</p>
-          <p className="text-3xl font-bold mt-1">
-            {Number(stats.totalProducts)}
-          </p>
-        </div>
-        <div className="border rounded-lg p-6">
-          <p className="text-sm text-gray-500">Total Sales</p>
-          <p className="text-3xl font-bold mt-1">
-            {Number(orderStats.totalOrders)}
-          </p>
-        </div>
-        <div className="border rounded-lg p-6">
-          <p className="text-sm text-gray-500">Revenue</p>
-          <p className="text-3xl font-bold mt-1">
-            ${(Number(orderStats.totalRevenue) / 100).toFixed(2)}
-          </p>
-        </div>
+      {/* Stat cards */}
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+        {statCards.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`bg-surface border border-border rounded-xl p-6 animate-fade-up stagger-${i + 1}`}
+          >
+            <p className="text-sm text-muted">{stat.label}</p>
+            <p className="text-3xl font-bold mt-1">{stat.value}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-8 flex gap-4">
-        <a
+      {/* Stripe CTA */}
+      {!stripeReady && (
+        <div className="mt-8 animate-fade-up stagger-4">
+          <StripeCTA creatorId={creator.id} />
+        </div>
+      )}
+
+      {/* Quick actions */}
+      <div className="mt-8 flex flex-wrap gap-3 animate-fade-up stagger-4">
+        <Link
           href="/dashboard/products"
-          className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+          className="bg-accent text-white px-6 py-3 rounded-full font-semibold hover:opacity-85 transition-opacity"
         >
           Manage Products
-        </a>
+        </Link>
+        <Link
+          href="/dashboard/orders"
+          className="border border-border px-6 py-3 rounded-full font-semibold hover:border-ink transition-colors"
+        >
+          View Orders
+        </Link>
         {stripeReady && (
-          <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+          <span className="text-sm text-green-700 font-medium flex items-center gap-1 px-3">
             Stripe connected
           </span>
         )}
       </div>
 
-      {!stripeReady && (
-        <div className="mt-6">
-          <StripeCTA creatorId={creator.id} />
-        </div>
-      )}
-
+      {/* Recent orders */}
       {recentOrders.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-14 animate-fade-up stagger-5">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Recent Orders</h2>
-            <Link href="/dashboard/orders" className="text-sm underline text-gray-500">
-              View all orders
+            <h2 className="text-xl font-bold">Recent Orders</h2>
+            <Link
+              href="/dashboard/orders"
+              className="text-sm text-muted hover:text-ink transition-colors"
+            >
+              View all &rarr;
             </Link>
           </div>
-          <div className="mt-4 border rounded-lg divide-y">
+          <div className="mt-4 border border-border rounded-xl divide-y divide-border overflow-hidden">
             {recentOrders.map((order) => (
-              <div key={order.id} className="p-4 flex justify-between">
+              <div
+                key={order.id}
+                className="px-5 py-4 flex justify-between items-center hover:bg-paper/50 transition-colors"
+              >
                 <div>
-                  <p className="font-medium">{order.buyerEmail}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-sm">{order.buyerEmail}</p>
+                  <p className="text-xs text-muted mt-0.5">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <p className="font-bold">
+                <p className="font-semibold">
                   ${(order.amountCents / 100).toFixed(2)}
                 </p>
               </div>

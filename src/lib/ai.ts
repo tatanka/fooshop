@@ -10,6 +10,17 @@ function getAnthropicClient(): Anthropic {
   return _anthropic;
 }
 
+const THEME_FIELDS_PROMPT = `"primaryColor": "#hex color that fits the brand",
+  "secondaryColor": "#hex secondary color",
+  "backgroundColor": "#hex background color",
+  "textColor": "#hex text color",
+  "accentColor": "#hex accent color",
+  "fontFamily": "sans | serif | mono",
+  "heroStyle": "gradient | solid | minimal",
+  "layout": "grid | featured | list"`;
+
+const THEME_GUIDANCE = `Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's niche.`;
+
 interface GeneratedStore {
   storeName: string;
   storeDescription: string;
@@ -52,20 +63,13 @@ Respond with ONLY valid JSON (no markdown, no backticks):
     }
   ],
   "theme": {
-    "primaryColor": "#hex color that fits the brand",
-    "secondaryColor": "#hex secondary color",
-    "backgroundColor": "#hex background color",
-    "textColor": "#hex text color",
-    "accentColor": "#hex accent color",
-    "fontFamily": "sans | serif | mono",
-    "heroStyle": "gradient | solid | minimal",
-    "layout": "grid | featured | list"
+    ${THEME_FIELDS_PROMPT}
   }
 }
 
 Generate 2-4 suggested products based on what they sell. Price realistically for digital products.
 
-Choose theme colors that form a cohesive palette. The backgroundColor should be a subtle tint (not pure white). The primaryColor and secondaryColor must be dark enough for white text overlay (used in hero headers). Pick fontFamily, heroStyle, and layout that match the creator's niche.`,
+${THEME_GUIDANCE}`,
       },
     ],
   });
@@ -73,4 +77,32 @@ Choose theme colors that form a cohesive palette. The backgroundColor should be 
   const text =
     message.content[0].type === "text" ? message.content[0].text : "";
   return JSON.parse(text) as GeneratedStore;
+}
+
+export async function generateTheme(prompt: string): Promise<StoreTheme> {
+  const client = getAnthropicClient();
+
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 500,
+    messages: [
+      {
+        role: "user",
+        content: `You are a brand designer. Based on the creator's description, generate a cohesive store theme.
+
+Creator says: "${prompt}"
+
+Respond with ONLY valid JSON (no markdown, no backticks):
+{
+  ${THEME_FIELDS_PROMPT}
+}
+
+${THEME_GUIDANCE}`,
+      },
+    ],
+  });
+
+  const text =
+    message.content[0].type === "text" ? message.content[0].text : "";
+  return JSON.parse(text) as StoreTheme;
 }

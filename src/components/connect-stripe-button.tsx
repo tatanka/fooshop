@@ -27,7 +27,7 @@ export function ConnectStripeButton() {
     <button
       onClick={handleConnect}
       disabled={loading}
-      className="border px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+      className="bg-accent text-white px-6 py-3 rounded-full font-semibold hover:opacity-85 transition-opacity disabled:opacity-50"
     >
       {loading ? "Connecting..." : "Connect Stripe"}
     </button>

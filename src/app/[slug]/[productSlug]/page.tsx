@@ -118,17 +118,13 @@ export default async function ProductPage({ params }: Props) {
         <h1 className="text-4xl font-bold">{product.title}</h1>
         <p className="mt-4 text-lg opacity-70">{product.description}</p>
 
-        <div className="mt-8 flex items-center gap-4">
-          <span
-            className="text-3xl font-bold"
-            style={{ color: theme.primaryColor }}
-          >
-            ${(product.priceCents / 100).toFixed(2)}
-          </span>
+        <div className="mt-8">
           <BuyButton
             productId={product.id}
             hasStripe={!!creator.stripeConnectId}
             primaryColor={theme.primaryColor}
+            priceCents={product.priceCents}
+            currency={product.currency}
           />
         </div>
 

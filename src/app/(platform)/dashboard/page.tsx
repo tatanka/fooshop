@@ -120,6 +120,12 @@ export default async function DashboardPage() {
         >
           View Orders
         </Link>
+        <Link
+          href="/dashboard/coupons"
+          className="border border-border px-6 py-3 rounded-full font-semibold hover:border-ink transition-colors"
+        >
+          Coupons
+        </Link>
         {stripeReady && (
           <span className="text-sm text-green-700 font-medium flex items-center gap-1 px-3">
             Stripe connected

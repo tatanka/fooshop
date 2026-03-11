@@ -193,6 +193,7 @@ export const downloadTokens = pgTable("download_tokens", {
   token: uuid("token").notNull().unique().$defaultFn(() => crypto.randomUUID()),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   downloadCount: integer("download_count").notNull().default(0),
+  source: text("source").notNull().default("web"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

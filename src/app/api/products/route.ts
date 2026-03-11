@@ -2,9 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { products, creators, pageViews } from "@/db/schema";
-import { eq, and, or, ilike, lte } from "drizzle-orm";
+import { eq, and, or, ilike, lte, desc } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
+  // If ?mine=true, return authenticated creator's products
+  if (req.nextUrl.searchParams.get("mine") === "true") {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const creator = await db
+      .select()
+      .from(creators)
+      .where(eq(creators.userId, session.user.id))
+      .then((rows) => rows[0]);
+
+    if (!creator) {
+      return NextResponse.json({ error: "Creator not found" }, { status: 404 });
+    }
+
+    const myProducts = await db
+      .select({ product: products, creatorSlug: creators.slug })
+      .from(products)
+      .innerJoin(creators, eq(products.creatorId, creators.id))
+      .where(eq(products.creatorId, creator.id))
+      .orderBy(desc(products.createdAt));
+
+    return NextResponse.json(myProducts);
+  }
+
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
   const q = searchParams.get("q");

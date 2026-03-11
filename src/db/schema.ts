@@ -172,6 +172,27 @@ export const products = pgTable("products", {
     .notNull(),
 });
 
+export const coupons = pgTable("coupons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  creatorId: uuid("creator_id")
+    .notNull()
+    .references(() => creators.id),
+  code: text("code").notNull(), // Application layer must .toUpperCase().trim() before save/lookup
+  discountType: discountTypeEnum("discount_type").notNull(),
+  discountValue: integer("discount_value").notNull(),
+  productId: uuid("product_id").references(() => products.id),
+  minAmountCents: integer("min_amount_cents"),
+  maxRedemptions: integer("max_redemptions"),
+  redemptionCount: integer("redemption_count").notNull().default(0),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+}, (table) => ({
+  uniqueCreatorCode: unique().on(table.creatorId, table.code),
+}));
+
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
   productId: uuid("product_id")
@@ -191,27 +212,6 @@ export const orders = pgTable("orders", {
     .defaultNow()
     .notNull(),
 });
-
-export const coupons = pgTable("coupons", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  creatorId: uuid("creator_id")
-    .notNull()
-    .references(() => creators.id),
-  code: text("code").notNull(),
-  discountType: discountTypeEnum("discount_type").notNull(),
-  discountValue: integer("discount_value").notNull(),
-  productId: uuid("product_id").references(() => products.id),
-  minAmountCents: integer("min_amount_cents"),
-  maxRedemptions: integer("max_redemptions"),
-  redemptionCount: integer("redemption_count").notNull().default(0),
-  expiresAt: timestamp("expires_at", { withTimezone: true }),
-  active: boolean("active").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-}, (table) => ({
-  uniqueCreatorCode: unique().on(table.creatorId, table.code),
-}));
 
 export const downloadTokens = pgTable("download_tokens", {
   id: uuid("id").primaryKey().defaultRandom(),

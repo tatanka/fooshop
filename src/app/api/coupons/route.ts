@@ -62,9 +62,16 @@ export async function POST(req: NextRequest) {
   } = body;
 
   // Validate required fields
-  if (!discountType || !discountValue) {
+  if (!discountType || discountValue === undefined || discountValue === null) {
     return NextResponse.json(
       { error: "Discount type and value are required" },
+      { status: 400 }
+    );
+  }
+
+  if (typeof discountValue !== "number" || !Number.isInteger(discountValue) || discountValue <= 0) {
+    return NextResponse.json(
+      { error: "Discount value must be a positive integer" },
       { status: 400 }
     );
   }

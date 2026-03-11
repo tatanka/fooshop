@@ -130,6 +130,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (err) {
+    // Rollback redemption count if Stripe session creation fails
+    if (couponId) {
+      await db
+        .update(coupons)
+        .set({ redemptionCount: sql`${coupons.redemptionCount} - 1` })
+        .where(eq(coupons.id, couponId))
+        .catch((rollbackErr) =>
+          console.error("Failed to rollback coupon redemption:", rollbackErr)
+        );
+    }
     console.error("Checkout session creation failed:", err);
     const message = err instanceof Error ? err.message : "Payment service error";
     return NextResponse.json({ error: message }, { status: 500 });

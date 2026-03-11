@@ -71,25 +71,23 @@ export async function POST(req: NextRequest) {
           source: "email",
         }).returning();
 
-        const product = await db
-          .select({
-            title: products.title,
-            currency: products.currency,
-          })
-          .from(products)
-          .where(eq(products.id, productId))
-          .then((rows) => rows[0]);
+        const [product, creator] = await Promise.all([
+          db.select({ title: products.title, currency: products.currency })
+            .from(products)
+            .where(eq(products.id, productId))
+            .then((rows) => rows[0]),
+          db.select({ storeName: creators.storeName, email: creators.email })
+            .from(creators)
+            .where(eq(creators.id, creatorId))
+            .then((rows) => rows[0]),
+        ]);
 
-        const creator = await db
-          .select({
-            storeName: creators.storeName,
-            email: creators.email,
-          })
-          .from(creators)
-          .where(eq(creators.id, creatorId))
-          .then((rows) => rows[0]);
-
-        if (product && creator) {
+        if (!product || !creator) {
+          console.warn("Webhook: product or creator not found for email", {
+            orderId: order.id, productId, creatorId,
+            productFound: !!product, creatorFound: !!creator,
+          });
+        } else {
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://fooshop.ai";
 
           await sendPurchaseConfirmation({

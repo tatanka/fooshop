@@ -8,7 +8,14 @@ function getMailtrap(): MailtrapClient {
   if (!_mailtrap) {
     const token = process.env.MAILTRAP_API_TOKEN;
     if (!token) throw new Error("MAILTRAP_API_TOKEN is not set");
-    _mailtrap = new MailtrapClient({ token });
+    const testInboxId = process.env.MAILTRAP_TEST_INBOX_ID;
+    _mailtrap = new MailtrapClient({
+      token,
+      ...(testInboxId && {
+        sandbox: true,
+        testInboxId: Number(testInboxId),
+      }),
+    });
   }
   return _mailtrap;
 }

@@ -1,5 +1,6 @@
 import { db } from "@/db";
-import { creators, products } from "@/db/schema";
+import { creators, products, DEFAULT_THEME } from "@/db/schema";
+import type { StoreTheme } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -56,6 +57,15 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const theme: StoreTheme = { ...DEFAULT_THEME, ...creator.storeTheme };
+
+  const fontClass =
+    theme.fontFamily === "serif"
+      ? "font-serif"
+      : theme.fontFamily === "mono"
+        ? "font-mono"
+        : "font-sans";
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -75,36 +85,61 @@ export default async function ProductPage({ params }: Props) {
   };
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {r2PublicUrl(product.coverImageUrl) && (
-        <img
-          src={r2PublicUrl(product.coverImageUrl)!}
-          alt={product.title}
-          className="w-full rounded-lg mb-8"
+    <div
+      className={`min-h-screen ${fontClass}`}
+      style={{
+        backgroundColor: theme.backgroundColor,
+        color: theme.textColor,
+      }}
+    >
+      <main className="max-w-2xl mx-auto px-4 py-12">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      )}
-      <h1 className="text-4xl font-bold">{product.title}</h1>
-      <p className="mt-4 text-lg text-gray-600">{product.description}</p>
-      <div className="mt-8 flex items-center gap-4">
-        <span className="text-3xl font-bold">
-          ${(product.priceCents / 100).toFixed(2)}
-        </span>
-        <BuyButton
-          productId={product.id}
-          hasStripe={!!creator.stripeConnectId}
-        />
-      </div>
-      <footer className="mt-16 text-sm text-gray-400">
-        Sold by{" "}
-        <a href={`/${slug}`} className="underline">
-          {creator.storeName}
-        </a>{" "}
-        on Fooshop
-      </footer>
-    </main>
+
+        {/* Store header */}
+        <a
+          href={`/${slug}`}
+          className="inline-block text-lg font-semibold mb-8 hover:opacity-80 transition-opacity"
+          style={{ color: theme.primaryColor }}
+        >
+          &larr; {creator.storeName}
+        </a>
+
+        {r2PublicUrl(product.coverImageUrl) && (
+          <img
+            src={r2PublicUrl(product.coverImageUrl)!}
+            alt={product.title}
+            className="w-full max-h-[500px] object-cover rounded-lg mb-8"
+          />
+        )}
+
+        <h1 className="text-4xl font-bold">{product.title}</h1>
+        <p className="mt-4 text-lg opacity-70">{product.description}</p>
+
+        <div className="mt-8 flex items-center gap-4">
+          <span
+            className="text-3xl font-bold"
+            style={{ color: theme.primaryColor }}
+          >
+            ${(product.priceCents / 100).toFixed(2)}
+          </span>
+          <BuyButton
+            productId={product.id}
+            hasStripe={!!creator.stripeConnectId}
+            primaryColor={theme.primaryColor}
+          />
+        </div>
+
+        <footer className="mt-16 text-sm opacity-40">
+          Sold by{" "}
+          <a href={`/${slug}`} className="underline">
+            {creator.storeName}
+          </a>{" "}
+          on Fooshop
+        </footer>
+      </main>
+    </div>
   );
 }

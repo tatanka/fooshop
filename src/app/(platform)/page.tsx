@@ -1,80 +1,93 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Fooshop — Your AI-powered storefront",
+  title: "Fooshop — AI-powered marketplace for digital products",
   description:
-    "The first marketplace for digital products built for AI discovery. Drop your products, AI finds your buyers. Zero fixed costs.",
+    "Sell digital products with zero fixed costs. AI generates your storefront. 5% commission only when you sell.",
 };
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      <section className="max-w-4xl mx-auto px-4 py-24 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-          Your AI-powered storefront.
+    <main>
+      {/* Hero */}
+      <section className="max-w-4xl mx-auto px-4 py-32 animate-fade-up">
+        <h1 className="text-5xl md:text-6xl font-bold leading-tight tracking-tight">
+          Sell digital products
+          <br />
+          with zero upfront costs.
         </h1>
-        <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
-          Drop your products, AI finds your buyers. The first marketplace for
-          digital products built for AI discovery.
+        <p className="mt-6 text-lg md:text-xl text-muted max-w-xl">
+          AI-powered storefronts. 5% only when you sell.
         </p>
-        <div className="mt-10 flex gap-4 justify-center">
+        <div className="mt-10 flex gap-4">
           <a
             href="/onboarding"
-            className="bg-black text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors"
+            className="bg-accent text-white px-8 py-4 rounded-full text-lg font-semibold hover:opacity-85 transition-opacity"
           >
-            Start selling — it&apos;s free
+            Start Selling
           </a>
           <a
             href="/explore"
-            className="border border-gray-300 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-colors"
+            className="border border-border text-ink px-8 py-4 rounded-full text-lg font-semibold hover:border-ink transition-colors"
           >
-            Explore products
+            Explore Products &rarr;
           </a>
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-6">
-            <div className="text-4xl mb-4">~</div>
-            <h3 className="text-xl font-semibold">AI generates your store</h3>
-            <p className="mt-2 text-gray-600">
-              Describe what you sell. AI creates your storefront, copy, and
-              product listings in 30 seconds.
-            </p>
-          </div>
-          <div className="text-center p-6">
-            <div className="text-4xl mb-4">&gt;</div>
-            <h3 className="text-xl font-semibold">AI discovers your products</h3>
-            <p className="mt-2 text-gray-600">
-              Your catalog is exposed via MCP server. AI agents can search,
-              recommend, and link to your products.
-            </p>
-          </div>
-          <div className="text-center p-6">
-            <div className="text-4xl mb-4">$</div>
-            <h3 className="text-xl font-semibold">Zero fixed costs</h3>
-            <p className="mt-2 text-gray-600">
-              No subscription. 5% commission only when you sell. Keep 95% of
-              every sale.
-            </p>
-          </div>
+      {/* How it works */}
+      <section className="max-w-5xl mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {[
+            {
+              num: "01.",
+              title: "Describe your store",
+              desc: "AI generates your storefront, copy, and product listings in 30 seconds.",
+            },
+            {
+              num: "02.",
+              title: "Upload your products",
+              desc: "Set your price, we handle the rest. Templates, ebooks, courses, anything digital.",
+            },
+            {
+              num: "03.",
+              title: "Get paid instantly",
+              desc: "5% commission. That's it. No subscription, no hidden fees.",
+            },
+          ].map((step, i) => (
+            <div key={step.num} className={`animate-fade-up stagger-${i + 1}`}>
+              <span className="font-[family-name:var(--font-display)] text-5xl font-bold text-accent/30">
+                {step.num}
+              </span>
+              <h3 className="mt-3 text-xl font-semibold">{step.title}</h3>
+              <p className="mt-2 text-muted">{step.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-3xl font-bold">Ready to sell?</h2>
-        <p className="mt-4 text-gray-600">
-          Templates, ebooks, courses, presets, prompts, assets — any digital
-          product.
-        </p>
-        <a
-          href="/onboarding"
-          className="mt-8 inline-block bg-black text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors"
-        >
-          Create your store
-        </a>
+      {/* Final CTA */}
+      <section className="max-w-5xl mx-auto px-4 pb-20">
+        <div className="bg-ink text-white rounded-2xl px-8 py-16 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold">
+            Ready to start selling?
+          </h2>
+          <p className="mt-4 text-white/60">
+            Templates, ebooks, courses, presets, prompts, assets — any digital product.
+          </p>
+          <a
+            href="/onboarding"
+            className="mt-8 inline-block bg-accent text-white px-8 py-4 rounded-full text-lg font-semibold hover:opacity-85 transition-opacity"
+          >
+            Create your store &rarr;
+          </a>
+        </div>
       </section>
+
+      {/* Footer */}
+      <footer className="text-center py-8 text-sm text-muted">
+        &copy; 2026 Fooshop
+      </footer>
     </main>
   );
 }

@@ -96,8 +96,8 @@ export default function EditProductPage() {
 
   if (fetching) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        <p className="text-gray-400">Loading...</p>
+      <main className="max-w-2xl mx-auto px-4 py-16">
+        <p className="text-muted">Loading...</p>
       </main>
     );
   }
@@ -105,7 +105,7 @@ export default function EditProductPage() {
   const isSubmitting = loading || fileUpload.isUploading || coverUpload.isUploading;
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
+    <main className="max-w-2xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold">Edit Product</h1>
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <div>
@@ -115,7 +115,7 @@ export default function EditProductPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -126,7 +126,7 @@ export default function EditProductPage() {
             onChange={(e) => setDescription(e.target.value)}
             required
             rows={4}
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black resize-none"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
           />
         </div>
 
@@ -144,7 +144,7 @@ export default function EditProductPage() {
             }}
             placeholder="9.99"
             required
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -153,7 +153,7 @@ export default function EditProductPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -168,7 +168,7 @@ export default function EditProductPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="published">Published</option>
             <option value="draft">Draft</option>
@@ -204,13 +204,13 @@ export default function EditProductPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-black text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+            className="bg-accent text-white px-8 py-3 rounded-full font-semibold hover:opacity-85 transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Saving..." : "Save Changes"}
           </button>
           <a
             href="/dashboard/products"
-            className="border px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            className="border px-8 py-3 rounded-full font-semibold hover:bg-paper/50 transition-colors"
           >
             Cancel
           </a>

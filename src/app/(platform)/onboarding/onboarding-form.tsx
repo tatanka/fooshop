@@ -44,20 +44,27 @@ export default function OnboardingForm() {
 
   if (result) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold">Your store is ready!</h1>
-        <div className="mt-8 border rounded-lg p-6">
-          <h2 className="text-2xl font-semibold">{result.storeName}</h2>
-          <p className="mt-2 text-gray-600">{result.storeDescription}</p>
+      <main className="max-w-2xl mx-auto px-4 py-20">
+        <h1 className="text-4xl font-bold animate-fade-up">
+          Your store is ready.
+        </h1>
+        <div className="mt-8 bg-surface border border-border rounded-xl p-8 animate-fade-up stagger-2">
+          <h2 className="text-2xl font-bold">{result.storeName}</h2>
+          <p className="mt-2 text-muted">{result.storeDescription}</p>
           <div className="mt-6">
-            <h3 className="font-semibold text-lg">Suggested products:</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">
+              Suggested products
+            </h3>
             <ul className="mt-3 space-y-3">
               {result.suggestedProducts.map((product, i) => (
-                <li key={i} className="border rounded p-4">
+                <li
+                  key={i}
+                  className={`border border-border rounded-xl p-4 animate-fade-up stagger-${Math.min(i + 3, 6)}`}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium">{product.title}</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-muted mt-1">
                         {product.description}
                       </p>
                     </div>
@@ -69,7 +76,7 @@ export default function OnboardingForm() {
                     {product.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs bg-gray-100 px-2 py-1 rounded"
+                        className="text-xs border border-border px-2 py-0.5 rounded-full text-muted"
                       >
                         {tag}
                       </span>
@@ -80,16 +87,16 @@ export default function OnboardingForm() {
             </ul>
           </div>
         </div>
-        <div className="mt-8 flex gap-4">
+        <div className="mt-8 flex gap-4 animate-fade-up stagger-5">
           <a
             href="/dashboard"
-            className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+            className="bg-accent text-white px-6 py-3 rounded-full font-semibold hover:opacity-85 transition-opacity"
           >
-            Go to Dashboard
+            Go to Dashboard &rarr;
           </a>
           <button
             onClick={() => setResult(null)}
-            className="border px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            className="border border-border px-6 py-3 rounded-full font-semibold hover:border-ink transition-colors"
           >
             Regenerate
           </button>
@@ -99,24 +106,26 @@ export default function OnboardingForm() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold">Set up your store</h1>
-      <p className="mt-4 text-gray-600">
+    <main className="max-w-2xl mx-auto px-4 py-20">
+      <h1 className="text-4xl font-bold animate-fade-up">
+        Set up your store
+      </h1>
+      <p className="mt-4 text-lg text-muted animate-fade-up stagger-2">
         Describe what you sell and AI will create your storefront in seconds.
       </p>
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="I sell Notion templates for project management and productivity. My audience is freelancers and small teams..."
-        className="mt-8 w-full h-40 border rounded-lg p-4 text-lg resize-none focus:outline-none focus:ring-2 focus:ring-black"
+        className="mt-8 w-full h-40 border border-border rounded-xl p-4 text-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent bg-surface animate-fade-up stagger-3"
       />
       {error && <p className="mt-2 text-red-600 text-sm">{error}</p>}
       <button
         onClick={handleGenerate}
         disabled={loading || !description.trim()}
-        className="mt-4 bg-black text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-4 bg-accent text-white px-8 py-3 rounded-full text-lg font-semibold hover:opacity-85 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed animate-fade-up stagger-4"
       >
-        {loading ? "Generating..." : "Generate my store"}
+        {loading ? "Generating..." : "Generate my store →"}
       </button>
     </main>
   );

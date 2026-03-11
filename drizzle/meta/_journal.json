@@ -15,6 +15,13 @@
       "when": 1772995331165,
       "tag": "0001_violet_landau",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773249079591,
+      "tag": "0002_sudden_baron_zemo",
+      "breakpoints": true
     }
   ]
 }

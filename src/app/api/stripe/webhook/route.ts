@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const { productId, creatorId } = session.metadata!;
+    const { productId, creatorId, couponId } = session.metadata!;
 
     if (!session.payment_intent) {
       console.error("Webhook: checkout.session.completed missing payment_intent", { sessionId: session.id });
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
           amountCents: session.amount_total!,
           platformFeeCents: calculatePlatformFee(session.amount_total!),
           stripePaymentIntentId: session.payment_intent as string,
+          couponId: couponId || null,
           status: "completed",
         }).returning();
 

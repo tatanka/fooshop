@@ -2,9 +2,16 @@ import { MailtrapClient } from "mailtrap";
 import { render } from "@react-email/components";
 import PurchaseConfirmation from "@/emails/purchase-confirmation";
 
-const mailtrap = new MailtrapClient({
-  token: process.env.MAILTRAP_API_TOKEN!,
-});
+let _mailtrap: MailtrapClient | null = null;
+
+function getMailtrap(): MailtrapClient {
+  if (!_mailtrap) {
+    _mailtrap = new MailtrapClient({
+      token: process.env.MAILTRAP_API_TOKEN!,
+    });
+  }
+  return _mailtrap;
+}
 
 export interface PurchaseEmailData {
   buyerEmail: string;
@@ -26,13 +33,13 @@ export async function sendPurchaseConfirmation(data: PurchaseEmailData) {
     render(component, { plainText: true }),
   ]);
 
-  await mailtrap.send({
+  await getMailtrap().send({
     from: {
       name: "Fooshop",
       email: process.env.EMAIL_FROM || "noreply@fooshop.ai",
     },
     to: [{ email: data.buyerEmail }],
-    subject: `Il tuo acquisto: ${data.productName}`,
+    subject: `Your purchase: ${data.productName}`,
     html,
     text,
     category: "purchase-confirmation",

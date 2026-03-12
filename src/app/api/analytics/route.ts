@@ -250,9 +250,7 @@ export async function GET(request: NextRequest) {
 
   // -- 5. Conversion funnel -----------------------------------------------
 
-  async function queryConversionFunnel() {
-    const pvCount = await queryProductPageViewCount(start, null);
-
+  async function queryConversionFunnel(productPageViewCount: number) {
     const biConditions = [eq(buyIntents.creatorId, creatorId)];
     if (start) biConditions.push(gte(buyIntents.createdAt, start));
     const [bi] = await db
@@ -271,7 +269,7 @@ export async function GET(request: NextRequest) {
       .where(and(...oConditions));
 
     return {
-      pageViews: pvCount,
+      pageViews: productPageViewCount,
       buyIntents: Number(bi.count),
       orders: Number(o.count),
     };
@@ -350,7 +348,6 @@ export async function GET(request: NextRequest) {
     revenueOverTime,
     topProducts,
     trafficSources,
-    conversionFunnel,
     couponPerformance,
   ] = await Promise.all([
     currentKpis,
@@ -362,9 +359,11 @@ export async function GET(request: NextRequest) {
     queryRevenueOverTime(),
     queryTopProducts(),
     queryTrafficSources(),
-    queryConversionFunnel(),
     queryCouponPerformance(),
   ]);
+
+  // Conversion funnel reuses curPPV to avoid a duplicate query
+  const conversionFunnel = await queryConversionFunnel(curPPV);
 
   const conversionRate = curPPV > 0
     ? Math.round((curKpis.orders / curPPV) * 1000) / 10

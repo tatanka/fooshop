@@ -75,6 +75,33 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Quick actions */}
+      <div className="mt-8 flex flex-wrap gap-3 animate-fade-up stagger-4">
+        <Link
+          href="/dashboard/products"
+          className="bg-accent text-white px-6 py-3 rounded-full font-semibold hover:opacity-85 transition-opacity"
+        >
+          Manage Products
+        </Link>
+        <Link
+          href="/dashboard/orders"
+          className="border border-border px-6 py-3 rounded-full font-semibold hover:border-ink transition-colors"
+        >
+          View Orders
+        </Link>
+        <Link
+          href="/dashboard/coupons"
+          className="border border-border px-6 py-3 rounded-full font-semibold hover:border-ink transition-colors"
+        >
+          Coupons
+        </Link>
+        {stripeReady && (
+          <span className="text-sm text-green-700 font-medium flex items-center gap-1 px-3">
+            Stripe connected
+          </span>
+        )}
+      </div>
+
       {/* Analytics */}
       <div className="mt-10">
         <Suspense fallback={null}>

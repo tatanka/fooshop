@@ -67,7 +67,7 @@ export function CouponPerformance({ coupons }: { coupons: CouponData[] }) {
                 ${(coupon.revenue / 100).toFixed(2)}
               </p>
               <p className="text-xs text-muted">
-                {coupon.active ? "revenue" : "expired"}
+                {coupon.active ? "revenue" : "inactive"}
               </p>
             </div>
           </div>

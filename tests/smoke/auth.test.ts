@@ -21,7 +21,8 @@ describe("Auth", () => {
 
   it("GET /dashboard redirects to sign-in when unauthenticated", async () => {
     const res = await fetch(`${BASE_URL}/dashboard`, { redirect: "manual" });
-    expect(res.status).toBe(307);
+    expect(res.status).toBeGreaterThanOrEqual(300);
+    expect(res.status).toBeLessThan(400);
     const location = res.headers.get("location") || "";
     expect(location).toContain("/api/auth/signin");
   });

@@ -1,13 +1,15 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { creators, products, orders } from "@/db/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { creators, orders } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { StripeCTA } from "@/components/stripe-cta";
 import { StripeToast } from "@/components/stripe-toast";
+import { DashboardAnalytics } from "@/components/dashboard/dashboard-analytics";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -23,26 +25,15 @@ export default async function DashboardPage() {
 
   const stripeCheckPromise = creator.stripeConnectId
     ? import("@/lib/stripe")
-        .then(({ getStripe }) => getStripe().accounts.retrieve(creator.stripeConnectId!))
+        .then(({ getStripe }) =>
+          getStripe().accounts.retrieve(creator.stripeConnectId!)
+        )
         .then((account) => !!account.charges_enabled)
         .catch(() => false)
     : Promise.resolve(false);
 
-  const [stripeReady, [stats], [orderStats], recentOrders] = await Promise.all([
+  const [stripeReady, recentOrders] = await Promise.all([
     stripeCheckPromise,
-    db
-      .select({
-        totalProducts: sql<number>`count(distinct ${products.id})`,
-      })
-      .from(products)
-      .where(eq(products.creatorId, creator.id)),
-    db
-      .select({
-        totalOrders: sql<number>`count(*)`,
-        totalRevenue: sql<number>`coalesce(sum(${orders.amountCents} - ${orders.platformFeeCents}), 0)`,
-      })
-      .from(orders)
-      .where(eq(orders.creatorId, creator.id)),
     db
       .select()
       .from(orders)
@@ -50,15 +41,6 @@ export default async function DashboardPage() {
       .orderBy(desc(orders.createdAt))
       .limit(5),
   ]);
-
-  const statCards = [
-    { label: "Products", value: Number(stats.totalProducts) },
-    { label: "Orders", value: Number(orderStats.totalOrders) },
-    {
-      label: "Revenue",
-      value: `$${(Number(orderStats.totalRevenue) / 100).toFixed(2)}`,
-    },
-  ];
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-16">
@@ -84,19 +66,6 @@ export default async function DashboardPage() {
             View store &rarr;
           </Link>
         </div>
-      </div>
-
-      {/* Stat cards */}
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {statCards.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={`bg-surface border border-border rounded-xl p-6 animate-fade-up stagger-${i + 1}`}
-          >
-            <p className="text-sm text-muted">{stat.label}</p>
-            <p className="text-3xl font-bold mt-1">{stat.value}</p>
-          </div>
-        ))}
       </div>
 
       {/* Stripe CTA */}
@@ -131,6 +100,13 @@ export default async function DashboardPage() {
             Stripe connected
           </span>
         )}
+      </div>
+
+      {/* Analytics */}
+      <div className="mt-10">
+        <Suspense fallback={null}>
+          <DashboardAnalytics />
+        </Suspense>
       </div>
 
       {/* Recent orders */}

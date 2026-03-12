@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { BASE_URL, STORE_SLUG, HAS_STORE_SLUG } from "./env";
 
+// Intentionally duplicates the /api/products call from api-products.test.ts —
+// this file serves as a standalone DB connectivity canary.
 describe("DB Health", () => {
   it("GET /api/products succeeds (proves DB connection)", async () => {
     const res = await fetch(`${BASE_URL}/api/products`);

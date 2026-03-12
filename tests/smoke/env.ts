@@ -1,5 +1,6 @@
-export const BASE_URL =
-  process.env.SMOKE_TEST_URL || "http://localhost:3000";
+export const BASE_URL = (
+  process.env.SMOKE_TEST_URL || "http://localhost:3000"
+).replace(/\/+$/, "");
 
 export const STORE_SLUG = process.env.SMOKE_TEST_STORE_SLUG || "";
 export const PRODUCT_SLUG = process.env.SMOKE_TEST_PRODUCT_SLUG || "";

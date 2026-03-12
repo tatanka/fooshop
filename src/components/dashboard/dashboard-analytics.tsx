@@ -85,23 +85,26 @@ export function DashboardAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (p: Period) => {
+  const fetchData = useCallback(async (p: Period, signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/analytics?period=${p}`);
+      const res = await fetch(`/api/analytics?period=${p}`, { signal });
       if (!res.ok) throw new Error("Failed to load analytics");
       const json = await res.json();
       setData(json);
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData(period);
+    const controller = new AbortController();
+    fetchData(period, controller.signal);
+    return () => controller.abort();
   }, [period, fetchData]);
 
   const handlePeriodChange = (newPeriod: Period) => {

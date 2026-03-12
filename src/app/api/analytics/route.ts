@@ -102,12 +102,6 @@ export async function GET(request: NextRequest) {
     if (rangeStart) productConditions.push(gte(pageViews.createdAt, rangeStart));
     if (rangeEnd) productConditions.push(lt(pageViews.createdAt, rangeEnd));
 
-    const [productViews] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(pageViews)
-      .innerJoin(products, eq(pageViews.productId, products.id))
-      .where(and(...productConditions));
-
     const storeConditions = [
       isNotNull(pageViews.storeSlug),
       eq(creators.slug, creatorSlug),
@@ -115,30 +109,21 @@ export async function GET(request: NextRequest) {
     if (rangeStart) storeConditions.push(gte(pageViews.createdAt, rangeStart));
     if (rangeEnd) storeConditions.push(lt(pageViews.createdAt, rangeEnd));
 
-    const [storeViews] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(pageViews)
-      .innerJoin(creators, eq(pageViews.storeSlug, creators.slug))
-      .where(and(...storeConditions));
+    const [[productViews], [storeViews]] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(pageViews)
+        .innerJoin(products, eq(pageViews.productId, products.id))
+        .where(and(...productConditions)),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(pageViews)
+        .innerJoin(creators, eq(pageViews.storeSlug, creators.slug))
+        .where(and(...storeConditions)),
+    ]);
 
-    return Number(productViews.count) + Number(storeViews.count);
-  }
-
-  async function queryProductPageViewCount(rangeStart: Date | null, rangeEnd: Date | null) {
-    const conditions = [
-      isNotNull(pageViews.productId),
-      eq(products.creatorId, creatorId),
-    ];
-    if (rangeStart) conditions.push(gte(pageViews.createdAt, rangeStart));
-    if (rangeEnd) conditions.push(lt(pageViews.createdAt, rangeEnd));
-
-    const [result] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(pageViews)
-      .innerJoin(products, eq(pageViews.productId, products.id))
-      .where(and(...conditions));
-
-    return Number(result.count);
+    const productOnly = Number(productViews.count);
+    return { total: productOnly + Number(storeViews.count), productOnly };
   }
 
   // -- 2. Revenue over time -----------------------------------------------
@@ -207,31 +192,32 @@ export async function GET(request: NextRequest) {
     ];
     if (start) productConditions.push(gte(pageViews.createdAt, start));
 
-    const productBySource = await db
-      .select({
-        source: pageViews.source,
-        count: sql<number>`count(*)`,
-      })
-      .from(pageViews)
-      .innerJoin(products, eq(pageViews.productId, products.id))
-      .where(and(...productConditions))
-      .groupBy(pageViews.source);
-
     const storeConditions = [
       isNotNull(pageViews.storeSlug),
       eq(creators.slug, creatorSlug),
     ];
     if (start) storeConditions.push(gte(pageViews.createdAt, start));
 
-    const storeBySource = await db
-      .select({
-        source: pageViews.source,
-        count: sql<number>`count(*)`,
-      })
-      .from(pageViews)
-      .innerJoin(creators, eq(pageViews.storeSlug, creators.slug))
-      .where(and(...storeConditions))
-      .groupBy(pageViews.source);
+    const [productBySource, storeBySource] = await Promise.all([
+      db
+        .select({
+          source: pageViews.source,
+          count: sql<number>`count(*)`,
+        })
+        .from(pageViews)
+        .innerJoin(products, eq(pageViews.productId, products.id))
+        .where(and(...productConditions))
+        .groupBy(pageViews.source),
+      db
+        .select({
+          source: pageViews.source,
+          count: sql<number>`count(*)`,
+        })
+        .from(pageViews)
+        .innerJoin(creators, eq(pageViews.storeSlug, creators.slug))
+        .where(and(...storeConditions))
+        .groupBy(pageViews.source),
+    ]);
 
     const merged = new Map<string, number>();
     for (const row of [...productBySource, ...storeBySource]) {
@@ -248,31 +234,16 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count);
   }
 
-  // -- 5. Conversion funnel -----------------------------------------------
+  // -- 5. Buy intent count ------------------------------------------------
 
-  async function queryConversionFunnel(productPageViewCount: number) {
-    const biConditions = [eq(buyIntents.creatorId, creatorId)];
-    if (start) biConditions.push(gte(buyIntents.createdAt, start));
-    const [bi] = await db
+  async function queryBuyIntentCount() {
+    const conditions = [eq(buyIntents.creatorId, creatorId)];
+    if (start) conditions.push(gte(buyIntents.createdAt, start));
+    const [result] = await db
       .select({ count: sql<number>`count(*)` })
       .from(buyIntents)
-      .where(and(...biConditions));
-
-    const oConditions = [
-      eq(orders.creatorId, creatorId),
-      eq(orders.status, "completed"),
-    ];
-    if (start) oConditions.push(gte(orders.createdAt, start));
-    const [o] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(orders)
-      .where(and(...oConditions));
-
-    return {
-      pageViews: productPageViewCount,
-      buyIntents: Number(bi.count),
-      orders: Number(o.count),
-    };
+      .where(and(...conditions));
+    return Number(result.count);
   }
 
   // -- 6. Coupon performance -----------------------------------------------
@@ -321,55 +292,52 @@ export async function GET(request: NextRequest) {
 
   const currentKpis = queryOrderKpis(start, null);
   const currentPageViews = queryPageViewCount(start, null);
-  const currentProductPageViews = queryProductPageViewCount(start, null);
 
   let previousKpis: Promise<{ revenue: number; orders: number }>;
-  let previousPageViews: Promise<number>;
-  let previousProductPageViews: Promise<number>;
+  let previousPageViews: Promise<{ total: number; productOnly: number }>;
 
   if (days !== null) {
     const prev = previousRange(days);
     previousKpis = queryOrderKpis(prev.start, prev.end);
     previousPageViews = queryPageViewCount(prev.start, prev.end);
-    previousProductPageViews = queryProductPageViewCount(prev.start, prev.end);
   } else {
     previousKpis = Promise.resolve({ revenue: 0, orders: 0 });
-    previousPageViews = Promise.resolve(0);
-    previousProductPageViews = Promise.resolve(0);
+    previousPageViews = Promise.resolve({ total: 0, productOnly: 0 });
   }
 
   const [
     curKpis,
     curPV,
-    curPPV,
     prevKpis,
     prevPV,
-    prevPPV,
     revenueOverTime,
     topProducts,
     trafficSources,
     couponPerformance,
+    buyIntentCount,
   ] = await Promise.all([
     currentKpis,
     currentPageViews,
-    currentProductPageViews,
     previousKpis,
     previousPageViews,
-    previousProductPageViews,
     queryRevenueOverTime(),
     queryTopProducts(),
     queryTrafficSources(),
     queryCouponPerformance(),
+    queryBuyIntentCount(),
   ]);
 
-  // Conversion funnel reuses curPPV to avoid a duplicate query
-  const conversionFunnel = await queryConversionFunnel(curPPV);
+  const conversionFunnel = {
+    pageViews: curPV.productOnly,
+    buyIntents: buyIntentCount,
+    orders: curKpis.orders,
+  };
 
-  const conversionRate = curPPV > 0
-    ? Math.round((curKpis.orders / curPPV) * 1000) / 10
+  const conversionRate = curPV.productOnly > 0
+    ? Math.round((curKpis.orders / curPV.productOnly) * 1000) / 10
     : 0;
-  const prevConversionRate = prevPPV > 0
-    ? Math.round((prevKpis.orders / prevPPV) * 1000) / 10
+  const prevConversionRate = prevPV.productOnly > 0
+    ? Math.round((prevKpis.orders / prevPV.productOnly) * 1000) / 10
     : 0;
 
   function pctChange(current: number, previous: number): number | null {
@@ -383,12 +351,12 @@ export async function GET(request: NextRequest) {
       revenue: curKpis.revenue,
       orders: curKpis.orders,
       conversionRate,
-      pageViews: curPV,
+      pageViews: curPV.total,
       changes: {
         revenue: pctChange(curKpis.revenue, prevKpis.revenue),
         orders: pctChange(curKpis.orders, prevKpis.orders),
         conversionRate: pctChange(conversionRate, prevConversionRate),
-        pageViews: pctChange(curPV, prevPV),
+        pageViews: pctChange(curPV.total, prevPV.total),
       },
     },
     revenueOverTime,

@@ -56,10 +56,10 @@ interface AnalyticsResponse {
     conversionRate: number;   // percentage (0-100)
     pageViews: number;
     changes: {
-      revenue: number;        // % change vs previous period
-      orders: number;
-      conversionRate: number;
-      pageViews: number;
+      revenue: number | null;        // % change vs previous period, null for "all"
+      orders: number | null;
+      conversionRate: number | null;
+      pageViews: number | null;
     };
   };
   revenueOverTime: Array<{
@@ -94,21 +94,35 @@ interface AnalyticsResponse {
 }
 ```
 
+### Global Rule: Revenue = Net Revenue
+
+All revenue figures throughout the API (KPIs, revenue over time, top products, coupon performance) represent the **creator's net revenue**: `amountCents - platformFeeCents`. All revenue queries filter `status = 'completed'` only.
+
+**Note:** The existing dashboard does NOT filter by `status = 'completed'`. This change makes analytics more accurate — pending/refunded orders should not count as revenue.
+
+### Page Views Join Strategy
+
+The `page_views` table has no `creatorId` column. To scope page views to a creator:
+- **Product page views** (`productId IS NOT NULL`): join `page_views` → `products` on `productId`, filter `products.creatorId = ?`
+- **Store page views** (`storeSlug IS NOT NULL`): join `page_views` → `creators` on `storeSlug = creators.slug`, filter `creators.id = ?`
+- **Traffic sources & KPI page views**: union both (product views + store views), deduplicated by `page_views.id`
+- **Conversion funnel page views**: product page views only (`productId IS NOT NULL`), since store-level visits don't have a direct buy path
+
 ### Query Strategy
 
 All 6 data sections are fetched in parallel via `Promise.all`:
 
-1. **KPIs** — Two time windows (current period + previous equivalent). Revenue: `SUM(amountCents - platformFeeCents)` on completed orders. Orders: `COUNT(*)`. Page views: `COUNT(*)` from page_views. Conversion: orders / pageViews × 100. Changes: `(current - previous) / previous × 100`.
+1. **KPIs** — Two time windows (current period + previous equivalent). Revenue: `SUM(amountCents - platformFeeCents)` on completed orders. Orders: `COUNT(*)`. Page views: total (product + store views via joins above). Conversion: completed orders / product page views × 100. Changes: `(current - previous) / previous × 100`. For "All" period, `changes` values are `null`.
 
 2. **Revenue over time** — `GROUP BY DATE(createdAt)` on completed orders. Daily buckets for 7d/30d, weekly buckets for 90d/All. Returns array sorted by date ascending.
 
 3. **Top products** — Join orders with products, `GROUP BY productId`, `SUM(amountCents - platformFeeCents)` as revenue, `COUNT(*)` as sales. `ORDER BY revenue DESC LIMIT 5`. Only completed orders.
 
-4. **Traffic sources** — `GROUP BY source` on page_views within the period. Calculate percentages client-side or in query.
+4. **Traffic sources** — All creator page views (product + store), `GROUP BY source`. Includes web, mcp, api sources. Percentages computed in the query.
 
-5. **Conversion funnel** — Three parallel counts: page_views (where productId is not null, to count product page views only), buy_intents, and completed orders. All filtered by creator and period.
+5. **Conversion funnel** — Three parallel counts: product page views only (`productId IS NOT NULL`, joined to products for creator filter), buy_intents (filtered by `creatorId`), and completed orders (filtered by `creatorId`). All filtered by period.
 
-6. **Coupon performance** — Join orders with coupons, `GROUP BY couponId`. Sum revenue per coupon. Include coupon metadata (code, discount type/value, active status). Only completed orders.
+6. **Coupon performance** — Join orders with coupons, `GROUP BY couponId`. Sum net revenue per coupon. Include coupon metadata (code, discount type/value, active status). Only completed orders.
 
 ### Auth & Security
 
@@ -134,11 +148,12 @@ All in `src/components/dashboard/`:
 
 ### Data Flow
 
-1. Dashboard page is a client component (interactive period state)
+1. Dashboard page remains a server component. The analytics section is a client component (`"use client"`) embedded within it.
 2. Period stored in URL search params (`?period=30d`) for shareability
 3. `useEffect` fetches `/api/analytics?period=X` on mount and period change
-4. Loading state shows skeleton/shimmer for each section
+4. Loading state shows skeleton/shimmer for each chart section
 5. Error state shows inline error message with retry button
+6. **Empty states per widget:** Revenue chart shows "No sales yet" with a flat line. Top products shows "No sales yet — publish a product to get started." Traffic sources shows "No visits recorded yet." Conversion funnel shows zeros. Coupon performance shows "No coupons created yet" with link to create one.
 
 ### Period Comparison Logic
 
@@ -146,7 +161,7 @@ For "% change vs previous period":
 - 7d: compare to the 7 days before that (day -14 to day -7)
 - 30d: compare to the 30 days before that (day -60 to day -30)
 - 90d: compare to the 90 days before that (day -180 to day -90)
-- All: no comparison shown (N/A)
+- All: no comparison shown (changes are `null`)
 
 ### Responsive Behavior
 

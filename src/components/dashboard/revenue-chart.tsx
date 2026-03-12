@@ -61,8 +61,8 @@ export function RevenueChart({ data }: { data: DataPoint[] }) {
             width={60}
           />
           <Tooltip
-            formatter={(value: number) => [formatCurrency(value), "Revenue"]}
-            labelFormatter={formatDate}
+            formatter={(value) => [formatCurrency(Number(value)), "Revenue"]}
+            labelFormatter={(label) => formatDate(String(label))}
             contentStyle={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--border)",

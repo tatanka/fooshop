@@ -60,7 +60,7 @@ Verifies product API endpoints respond with correct shape.
 |------|--------|------|--------|
 | List products | GET | `/api/products` | status 200, JSON array |
 | Filter by category | GET | `/api/products?category=ebook` | status 200, JSON array |
-| Get by slug | GET | `/api/products/by-slug/[PRODUCT_SLUG]` | status 200, has `id`, `title`, `price` fields |
+| Get by slug | GET | `/api/products/by-slug/[PRODUCT_SLUG]` | status 200, has `id`, `title`, `priceCents` fields |
 
 ### `tests/smoke/auth.test.ts`
 
@@ -89,6 +89,8 @@ Verifies database connectivity through existing endpoints.
 - **Timeout**: 10s per test
 - **No retries**: Smoke tests should pass on first try — failure = real problem
 - **Base URL pattern**: `const BASE_URL = process.env.SMOKE_TEST_URL || "http://localhost:3000"`
+- **Conditional skip**: Tests depending on `SMOKE_TEST_STORE_SLUG` or `SMOKE_TEST_PRODUCT_SLUG` use `describe.skipIf` when the variable is not set, with a console warning. This way `pnpm smoke` with no config still runs the non-slug tests.
+- **Page view side effect**: Smoke tests hitting `/api/products/by-slug/[slug]` will insert `page_views` records. Pass `?source=smoke` if you want to distinguish these from real traffic.
 
 ## Out of Scope
 

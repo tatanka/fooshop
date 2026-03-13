@@ -18,6 +18,10 @@ Creators can generate referral codes and assign them to affiliates (fans, promot
 | Commission config | Per-code | Each referral code has its own commission percentage. Maximum flexibility. |
 | Click tracking | Yes | Track clicks + conversions for conversion rate analytics. |
 | Referral vs coupon | Separate system | Referrals track attribution, coupons give discounts. Different concepts, separate tables. Cumulable on the same order. |
+| Attribution model | Last-click wins | If a user clicks multiple referral links, the most recent code at time of checkout is used. |
+| Invalid referral at checkout | Soft failure | Invalid/expired referral codes are silently ignored — checkout proceeds without referral. Unlike coupons (which affect price and must be valid), referrals are tracking-only. |
+| Storage | localStorage with 30-day TTL | More durable than sessionStorage — survives tab close, browser restart. Standard for affiliate attribution. |
+| Code normalization | Uppercase + trim | Same as coupons. Codes normalized at creation and lookup. |
 
 ## Data Model
 
@@ -27,18 +31,18 @@ Creators can generate referral codes and assign them to affiliates (fans, promot
 |-------|------|-------|
 | id | UUID | PK, default random |
 | creatorId | UUID | FK → creators, not null |
-| code | varchar(20) | Unique per creator |
-| affiliateName | varchar(100) | Not null |
-| affiliateEmail | varchar(255) | Nullable, for creator reference |
+| code | text | Unique per creator, normalized to uppercase |
+| affiliateName | text | Not null |
+| affiliateEmail | text | Nullable, for creator reference |
 | productId | UUID | Nullable FK → products. Null = store-wide |
-| commissionPercent | integer | e.g. 10 = 10%, not null |
+| commissionPercent | integer | e.g. 10 = 10%, not null, range 1-100 |
 | clickCount | integer | Default 0, atomic increment |
 | active | boolean | Default true |
-| createdAt | timestamp | Default now |
+| createdAt | timestamp (with timezone) | Default now, not null |
 
 **Constraints:**
 - Unique on `(creatorId, code)`
-- `commissionPercent` between 1 and 100
+- `commissionPercent` between 1 and 100 (enforced at application layer)
 
 ### Table: `referral_conversions`
 
@@ -47,20 +51,25 @@ Creators can generate referral codes and assign them to affiliates (fans, promot
 | id | UUID | PK, default random |
 | referralId | UUID | FK → referrals, not null |
 | orderId | UUID | FK → orders, unique (one conversion per order) |
-| commissionCents | integer | Calculated commission in cents |
-| createdAt | timestamp | Default now |
+| commissionCents | integer | Calculated commission in cents, not null |
+| createdAt | timestamp (with timezone) | Default now, not null |
+
+**Note:** All column types use `text()` (not `varchar`) to match existing codebase patterns. Length validation is enforced at the application layer.
 
 ## Checkout Flow Integration
 
 ### 1. Referral Code Capture
 
-- When a user visits `fooshop.ai/store?ref=CODE` or `fooshop.ai/store/product?ref=CODE`, the code is saved in `sessionStorage`
-- The `BuyButton` component reads the ref code and sends it to `/api/checkout` alongside `productId` and `couponCode`
+- When a user visits `fooshop.ai/store?ref=CODE` or `fooshop.ai/store/product?ref=CODE`, the code is saved in `localStorage` with a 30-day TTL (key: `fooshop_ref`, value: `{ code, timestamp }`)
+- The `BuyButton` component reads the ref code from localStorage (checking TTL), and sends it to `/api/checkout` alongside `productId` and `couponCode`
+- The request body adds a new field: `referralCode` (optional string)
 
 ### 2. Validation at Checkout
 
+- Look up referral by `(creatorId, code)` where code is normalized to uppercase — same pattern as coupon validation
 - Verify code exists, is active, belongs to the creator of the product being purchased
 - If per-product, verify productId matches
+- **Soft failure:** If referral code is invalid, expired, or not found, checkout proceeds normally without referral attribution. No error returned to the user.
 - Does NOT alter the price — Stripe flow remains identical
 
 ### 3. Stripe Metadata
@@ -72,17 +81,39 @@ Creators can generate referral codes and assign them to affiliates (fans, promot
 
 In the `checkout.session.completed` handler, if `referralId` is present in metadata:
 
-```
-commissionCents = Math.round(amountCents * commissionPercent / 100)
+```typescript
+// Inside the existing db.transaction(async (tx) => { ... })
+// After order insert, before downloadToken insert:
+
+if (referralId) {
+  const referral = await tx.select()
+    .from(referrals)
+    .where(eq(referrals.id, referralId))
+    .then(rows => rows[0]);
+
+  if (referral) {
+    const commissionCents = Math.round(amountCents * referral.commissionPercent / 100);
+
+    // Skip conversion if commission is 0 (e.g., 100% coupon discount)
+    if (commissionCents > 0) {
+      await tx.insert(referralConversions).values({
+        referralId,
+        orderId: order.id,
+        commissionCents,
+      });
+    }
+  }
+}
 ```
 
-Commission is calculated on the amount actually paid (post-coupon). The `referral_conversions` record is created atomically alongside the order.
+Commission is calculated on the amount actually paid (post-coupon). The insert goes inside the existing transaction block alongside the order and downloadToken inserts.
 
 ### 5. Click Tracking
 
 - Endpoint: `GET /api/referrals/track?code=CODE`
 - Called by frontend when page loads with `?ref=CODE` in URL
 - Atomic increment on `referrals.clickCount` (same pattern as coupon redemptionCount)
+- Clicks are counted independently from conversions — a click with no purchase is expected behavior
 
 ## API Endpoints
 
@@ -158,7 +189,7 @@ Commission is calculated on the amount actually paid (post-coupon). The `referra
 ```
 1. Creator creates referral code "MARIO10" (10%, store-wide)
 2. Mario shares link: fooshop.ai/mario-store?ref=MARIO10
-3. User clicks link → clickCount +1, ref=MARIO10 saved in sessionStorage
+3. User clicks link → clickCount +1, ref=MARIO10 saved in localStorage (30-day TTL)
 4. User browses, adds coupon "SAVE5" ($5 off), buys $100 product
 5. Checkout: productId + couponCode=SAVE5 + referralCode=MARIO10 sent to /api/checkout
 6. Stripe Checkout created with metadata: { productId, creatorId, couponId, referralId }
@@ -169,11 +200,22 @@ Commission is calculated on the amount actually paid (post-coupon). The `referra
 9. Creator dashboard shows: "MARIO10: 150 clicks, 12 sales, 8% CR, $120.00 commission owed"
 ```
 
+## Edge Cases
+
+- **Self-referral:** Out of scope for MVP. Commissions are tracking-only with no automated payout, so self-referral has no financial impact. Can add prevention later if needed.
+- **Multiple referral clicks:** Last-click wins. localStorage is overwritten with the most recent referral code.
+- **Zero-amount orders (100% coupon):** No referral conversion is created when commissionCents would be 0.
+- **Deleted referrals with conversions:** Cannot delete — endpoint deactivates instead to preserve conversion history.
+- **Referral for wrong product:** If a per-product referral code is used on a different product, it's silently ignored (soft failure).
+
 ## Implementation Notes
 
 - Follow existing coupon system patterns for CRUD, validation, and checkout integration
+- All string columns use `text()` type (not `varchar`) to match codebase conventions
+- All timestamps use `withTimezone: true` to match codebase conventions
+- Referral codes normalized to uppercase and trimmed at both creation and lookup
 - Atomic increment for clickCount (SQL `+ 1`, same as coupon redemptionCount)
 - Idempotency: unique constraint on `referral_conversions.orderId` prevents double-counting
 - Code generation: reuse `generateCouponCode()` from `src/lib/coupon.ts` or similar
-- Commission validation: 1-100 range, integer only
+- Commission validation: 1-100 range, integer only (application layer)
 - Referral + coupon are independent — both can apply to the same order

@@ -283,3 +283,17 @@ export const referralConversions = pgTable("referral_conversions", {
     .defaultNow()
     .notNull(),
 });
+
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  creatorId: uuid("creator_id").references(() => creators.id),
+  keyHash: text("key_hash").notNull(),
+  keyPrefix: text("key_prefix").notNull(),
+  name: text("name").notNull(),
+  scopes: text("scopes").array().notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

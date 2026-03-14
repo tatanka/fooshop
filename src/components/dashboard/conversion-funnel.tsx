@@ -7,7 +7,7 @@ interface FunnelData {
 }
 
 export function ConversionFunnel({ funnel }: { funnel: FunnelData }) {
-  const maxVal = Math.max(funnel.pageViews, 1);
+  const maxVal = Math.max(funnel.pageViews, funnel.buyIntents, funnel.orders, 1);
 
   const steps = [
     {

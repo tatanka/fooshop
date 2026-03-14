@@ -13,7 +13,7 @@ export function LegalPage({ content }: LegalPageProps) {
   const doc = content[language];
 
   return (
-    <article className="max-w-3xl mx-auto px-4 py-16 animate-fade-up">
+    <article lang={language} className="max-w-3xl mx-auto px-4 py-16 animate-fade-up">
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-bold font-[family-name:var(--font-display)]">{doc.title}</h1>

@@ -9,9 +9,10 @@ interface LanguageToggleProps {
 
 export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
   return (
-    <div className="flex rounded-full border border-border overflow-hidden text-sm">
+    <div role="group" aria-label="Language" className="flex rounded-full border border-border overflow-hidden text-sm">
       <button
         onClick={() => onChange("en")}
+        aria-pressed={language === "en"}
         className={`px-3 py-1 font-medium transition-colors ${
           language === "en"
             ? "bg-ink text-white"
@@ -22,6 +23,7 @@ export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
       </button>
       <button
         onClick={() => onChange("it")}
+        aria-pressed={language === "it"}
         className={`px-3 py-1 font-medium transition-colors ${
           language === "it"
             ? "bg-ink text-white"

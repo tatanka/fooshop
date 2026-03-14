@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Partial and full refunds both revoke access (see spec GEN-019)
   if (event.type === "charge.refunded") {
     const charge = event.data.object;
 

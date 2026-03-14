@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { db } from "@/db";
 import { creators, products, DEFAULT_THEME } from "@/db/schema";
 import type { StoreTheme } from "@/db/schema";
@@ -5,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { r2PublicUrl } from "@/lib/r2-url";
+import { ReferralTracker } from "@/components/referral-tracker";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -282,6 +284,10 @@ export default async function StorePage({ params, searchParams }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+
+        <Suspense fallback={null}>
+          <ReferralTracker />
+        </Suspense>
 
         <StoreHero
           storeName={creator.storeName ?? ""}

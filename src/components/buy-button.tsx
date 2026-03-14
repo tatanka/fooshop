@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getStoredReferralCode } from "@/components/referral-tracker";
 
 interface BuyButtonProps {
   productId: string;
@@ -75,6 +76,8 @@ export function BuyButton({ productId, hasStripe, primaryColor, priceCents, curr
       try {
         const body: Record<string, string> = { productId };
         if (appliedCoupon) body.couponCode = appliedCoupon.code;
+        const refCode = getStoredReferralCode();
+        if (refCode) body.referralCode = refCode;
 
         const res = await fetch("/api/checkout", {
           method: "POST",

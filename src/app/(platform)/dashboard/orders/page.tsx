@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { creators, orders, products } from "@/db/schema";
+import { creators, orders, products, referralConversions, referrals } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -29,9 +29,13 @@ export default async function OrdersPage() {
       platformFeeCents: orders.platformFeeCents,
       status: orders.status,
       createdAt: orders.createdAt,
+      affiliateName: referrals.affiliateName,
+      commissionCents: referralConversions.commissionCents,
     })
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.id))
+    .leftJoin(referralConversions, eq(orders.id, referralConversions.orderId))
+    .leftJoin(referrals, eq(referralConversions.referralId, referrals.id))
     .where(eq(orders.creatorId, creator.id))
     .orderBy(desc(orders.createdAt));
 
@@ -72,6 +76,7 @@ export default async function OrdersPage() {
                 <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Amount</th>
                 <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Net</th>
                 <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Status</th>
+                <th className="py-3 pr-4 text-xs uppercase tracking-wider text-muted font-medium">Referral</th>
                 <th className="py-3 text-xs uppercase tracking-wider text-muted font-medium">Date</th>
               </tr>
             </thead>
@@ -96,6 +101,18 @@ export default async function OrdersPage() {
                   </td>
                   <td className="py-3 pr-4">
                     <StatusBadge status={order.status} />
+                  </td>
+                  <td className="py-3 pr-4 text-sm">
+                    {order.affiliateName ? (
+                      <div>
+                        <p className="text-muted">{order.affiliateName}</p>
+                        <p className="text-xs text-muted">
+                          ${((order.commissionCents ?? 0) / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
                   </td>
                   <td className="py-3 text-sm text-muted">
                     {new Date(order.createdAt).toLocaleDateString()}

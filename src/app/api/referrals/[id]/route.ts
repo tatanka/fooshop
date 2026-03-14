@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { creators, referrals, referralConversions } from "@/db/schema";
+import { creators, referrals, referralConversions, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 interface Props {
@@ -44,8 +44,24 @@ export async function PUT(req: NextRequest, { params }: Props) {
     }
     allowedFields.commissionPercent = body.commissionPercent;
   }
-  if (body.active !== undefined) allowedFields.active = body.active;
-  if (body.productId !== undefined) allowedFields.productId = body.productId || null;
+  if (body.active !== undefined && typeof body.active === "boolean") {
+    allowedFields.active = body.active;
+  }
+  if (body.productId !== undefined) {
+    const pid = body.productId || null;
+    if (pid) {
+      const product = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(and(eq(products.id, pid), eq(products.creatorId, creator.id)))
+        .then((rows) => rows[0]);
+
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+    }
+    allowedFields.productId = pid;
+  }
 
   if (Object.keys(allowedFields).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

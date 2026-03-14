@@ -249,3 +249,37 @@ export const buyIntents = pgTable("buy_intents", {
     .defaultNow()
     .notNull(),
 });
+
+export const referrals = pgTable("referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  creatorId: uuid("creator_id")
+    .notNull()
+    .references(() => creators.id),
+  code: text("code").notNull(), // Application layer must .toUpperCase().trim() before save/lookup
+  affiliateName: text("affiliate_name").notNull(),
+  affiliateEmail: text("affiliate_email"),
+  productId: uuid("product_id").references(() => products.id),
+  commissionPercent: integer("commission_percent").notNull(),
+  clickCount: integer("click_count").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+}, (table) => ({
+  uniqueCreatorCode: unique().on(table.creatorId, table.code),
+}));
+
+export const referralConversions = pgTable("referral_conversions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referralId: uuid("referral_id")
+    .notNull()
+    .references(() => referrals.id),
+  orderId: uuid("order_id")
+    .notNull()
+    .unique()
+    .references(() => orders.id),
+  commissionCents: integer("commission_cents").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

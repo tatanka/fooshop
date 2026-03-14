@@ -145,5 +145,61 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Partial and full refunds both revoke access (see spec GEN-019)
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object;
+
+    // Extract payment_intent ID (can be string, expanded object, or null)
+    const paymentIntentId =
+      typeof charge.payment_intent === "string"
+        ? charge.payment_intent
+        : charge.payment_intent?.id;
+
+    if (!paymentIntentId) {
+      console.warn("Webhook: charge.refunded missing payment_intent", { chargeId: charge.id });
+      return NextResponse.json({ received: true });
+    }
+
+    // Look up order by payment intent
+    const order = await db
+      .select({ id: orders.id, status: orders.status })
+      .from(orders)
+      .where(eq(orders.stripePaymentIntentId, paymentIntentId))
+      .then((rows) => rows[0]);
+
+    if (!order) {
+      console.warn("Webhook: charge.refunded order not found", { paymentIntentId });
+      return NextResponse.json({ received: true });
+    }
+
+    // Idempotency: skip if already refunded
+    if (order.status === "refunded") {
+      return NextResponse.json({ received: true });
+    }
+
+    try {
+      await db.transaction(async (tx) => {
+        // Update order status to refunded
+        await tx
+          .update(orders)
+          .set({ status: "refunded" })
+          .where(eq(orders.id, order.id));
+
+        // Expire all download tokens for this order
+        await tx
+          .update(downloadTokens)
+          .set({ expiresAt: new Date() })
+          .where(eq(downloadTokens.orderId, order.id));
+      });
+    } catch (error) {
+      console.error("Webhook: failed to process charge.refunded", {
+        chargeId: charge.id,
+        orderId: order.id,
+        error,
+      });
+      return NextResponse.json({ error: "Processing failed" }, { status: 500 });
+    }
+  }
+
   return NextResponse.json({ received: true });
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getStripe, calculatePlatformFee } from "@/lib/stripe";
 import { db } from "@/db";
-import { orders, downloadTokens, products, creators } from "@/db/schema";
+import { orders, downloadTokens, products, creators, referrals, referralConversions } from "@/db/schema";
 import { sendPurchaseConfirmation } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const { productId, creatorId, couponId } = session.metadata!;
+    const { productId, creatorId, couponId, referralId } = session.metadata!;
 
     if (!session.payment_intent) {
       console.error("Webhook: checkout.session.completed missing payment_intent", { sessionId: session.id });
@@ -60,6 +60,29 @@ export async function POST(req: NextRequest) {
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           source: "web",
         });
+
+        // Create referral conversion if applicable
+        if (referralId) {
+          const referral = await tx
+            .select({ commissionPercent: referrals.commissionPercent })
+            .from(referrals)
+            .where(eq(referrals.id, referralId))
+            .then((rows) => rows[0]);
+
+          if (referral) {
+            const commissionCents = Math.round(
+              session.amount_total! * referral.commissionPercent / 100
+            );
+
+            if (commissionCents > 0) {
+              await tx.insert(referralConversions).values({
+                referralId,
+                orderId: order.id,
+                commissionCents,
+              });
+            }
+          }
+        }
 
         return [order];
       });

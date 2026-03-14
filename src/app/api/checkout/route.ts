@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe, calculatePlatformFee } from "@/lib/stripe";
 import { applyDiscount } from "@/lib/coupon";
 import { db } from "@/db";
-import { products, creators, coupons } from "@/db/schema";
+import { products, creators, coupons, referrals } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
-  const { productId, couponCode, source } = await req.json();
+  const { productId, couponCode, referralCode, source } = await req.json();
 
   const product = await db
     .select()
@@ -94,6 +94,30 @@ export async function POST(req: NextRequest) {
     couponId = coupon.id;
   }
 
+  // Referral validation (soft failure — invalid codes are silently ignored)
+  let referralId: string | null = null;
+
+  if (referralCode) {
+    const referral = await db
+      .select()
+      .from(referrals)
+      .where(
+        and(
+          eq(referrals.creatorId, product.creatorId),
+          eq(referrals.code, referralCode.toUpperCase().trim()),
+          eq(referrals.active, true)
+        )
+      )
+      .then((rows) => rows[0]);
+
+    if (referral) {
+      // If per-product, verify productId matches
+      if (!referral.productId || referral.productId === productId) {
+        referralId = referral.id;
+      }
+    }
+  }
+
   const platformFee = calculatePlatformFee(finalPriceCents);
 
   try {
@@ -123,6 +147,7 @@ export async function POST(req: NextRequest) {
         creatorId: creator.id,
         source: source ?? "web",
         ...(couponId && { couponId }),
+        ...(referralId && { referralId }),
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/${creator.slug}/${product.slug}`,

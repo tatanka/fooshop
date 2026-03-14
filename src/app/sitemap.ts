@@ -22,6 +22,8 @@ export default async function sitemap() {
   return [
     { url: BASE_URL, lastModified: new Date() },
     { url: `${BASE_URL}/explore`, lastModified: new Date() },
+    { url: `${BASE_URL}/legal/terms`, lastModified: new Date() },
+    { url: `${BASE_URL}/legal/privacy`, lastModified: new Date() },
     ...allCreators.map((c) => ({
       url: `${BASE_URL}/${c.slug}`,
       lastModified: c.createdAt,

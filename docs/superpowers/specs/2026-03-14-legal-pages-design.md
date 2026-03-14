@@ -46,11 +46,18 @@ type LegalDocument = {
 
 ## Footer Component
 
-- Server component added to `(platform)/layout.tsx` after `{children}`
+**Platform pages** (`(platform)` route group — homepage, explore, dashboard, legal, onboarding):
+- Shared `<Footer />` server component added to `(platform)/layout.tsx` after `{children}`
 - Links: Terms of Service, Privacy Policy, Fooshop home
 - Styling: `border-t border-border`, `py-8`, `text-sm text-muted`, `max-w-6xl mx-auto px-4`
 - Responsive: links stack vertically on mobile, horizontal on desktop
 - No animation
+- Replaces the existing inline footer on the homepage
+
+**Store pages** (`[slug]` and `[slug]/[productSlug]` — outside `(platform)` route group):
+- Update existing inline footers to add legal links (Terms · Privacy) alongside current text
+- Keep existing "Powered by Fooshop" / "Sold by ... on Fooshop" text — just append legal links
+- These pages use creator-themed layouts, so a global footer would conflict with theming
 
 ## Language Toggle
 
@@ -98,11 +105,30 @@ type LegalDocument = {
 11. Changes to This Policy
 12. Contact (DPO/contact email)
 
+## Metadata
+
+Each legal page exports Next.js metadata for SEO:
+
+```typescript
+// terms/page.tsx
+export const metadata: Metadata = {
+  title: "Terms of Service | Fooshop",
+  description: "Terms of Service for Fooshop, the AI-powered marketplace for digital products.",
+};
+
+// privacy/page.tsx
+export const metadata: Metadata = {
+  title: "Privacy Policy | Fooshop",
+  description: "Privacy Policy for Fooshop. How we collect, use, and protect your data.",
+};
+```
+
 ## Additional Changes
 
 - **Sitemap:** Add `/legal/terms` and `/legal/privacy` to `src/app/sitemap.ts`
-- **Existing inline footers:** Remove from homepage; the shared footer replaces them
 
 ## Content Language
 
 Both English and Italian, with client-side toggle defaulting to English. Content is drafted as functional legal text tailored to Fooshop's business model (to be lawyer-reviewed before launch).
+
+**SEO trade-off (intentional):** Single canonical URL means search engines index only the default English content. Italian users searching for "termini di servizio fooshop" won't find the Italian version via search. This is acceptable for launch — if Italian SEO becomes important later, we can switch to URL-based language routing with `hreflang` tags.

@@ -135,11 +135,18 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         <footer className="mt-16 text-sm opacity-40">
-          Sold by{" "}
-          <a href={`/${slug}`} className="underline">
-            {creator.storeName}
-          </a>{" "}
-          on Fooshop
+          <p>
+            Sold by{" "}
+            <a href={`/${slug}`} className="underline">
+              {creator.storeName}
+            </a>{" "}
+            on Fooshop
+          </p>
+          <p className="mt-2">
+            <a href="/legal/terms" className="underline hover:opacity-70">Terms</a>
+            {" · "}
+            <a href="/legal/privacy" className="underline hover:opacity-70">Privacy</a>
+          </p>
         </footer>
       </main>
     </div>

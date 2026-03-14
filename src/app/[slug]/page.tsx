@@ -307,7 +307,12 @@ export default async function StorePage({ params, searchParams }: Props) {
         )}
 
         <footer className="mt-16 text-center text-sm opacity-40">
-          Powered by Fooshop
+          <p>Powered by Fooshop</p>
+          <p className="mt-2">
+            <a href="/legal/terms" className="underline hover:opacity-70">Terms</a>
+            {" · "}
+            <a href="/legal/privacy" className="underline hover:opacity-70">Privacy</a>
+          </p>
         </footer>
       </main>
     </div>

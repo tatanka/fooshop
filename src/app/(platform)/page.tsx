@@ -84,10 +84,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="text-center py-8 text-sm text-muted">
-        &copy; 2026 Fooshop
-      </footer>
     </main>
   );
 }

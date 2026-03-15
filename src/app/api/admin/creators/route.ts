@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, hasScope, insufficientScope } from "@/lib/api-key";
 import { db } from "@/db";
 import { creators } from "@/db/schema";
-import { sql, ilike, or, and, isNotNull, SQL } from "drizzle-orm";
+import { sql, ilike, or, and, isNotNull, isNull, gt, SQL } from "drizzle-orm";
 
 const SCOPE = "admin:read:creators";
 
@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
     conditions.push(isNotNull(creators.commissionOverridePercent));
     conditions.push(
       or(
-        sql`${creators.commissionOverrideExpiresAt} IS NULL`,
-        sql`${creators.commissionOverrideExpiresAt} > NOW()`
+        isNull(creators.commissionOverrideExpiresAt),
+        gt(creators.commissionOverrideExpiresAt, sql`NOW()`)
       )!
     );
   }

@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/db", () => ({
-  db: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-  },
+  db: {},
 }));
 
 vi.mock("@/lib/api-key", () => ({
@@ -36,7 +32,7 @@ describe("GET /api/admin/creators", () => {
 
   it("returns all creators when no query params", async () => {
     const mockRows = [{ id: "1", name: "Alice", email: "alice@test.com" }];
-    (db.select as any).mockReturnValue({
+    (db as any).select = vi.fn().mockReturnValue({
       from: vi.fn().mockResolvedValue(mockRows),
     });
 
@@ -51,13 +47,13 @@ describe("GET /api/admin/creators", () => {
     const mockRows = [{ id: "1", name: "Alice" }];
     const mockWhere = vi.fn().mockResolvedValue(mockRows);
     const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
-    (db.select as any).mockReturnValue({ from: mockFrom });
+    (db as any).select = vi.fn().mockReturnValue({ from: mockFrom });
 
     const res = await GET(makeRequest("/api/admin/creators?q=alice"));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(mockWhere).toHaveBeenCalled();
+    expect(mockWhere).toHaveBeenCalledTimes(1);
     expect(body).toEqual(mockRows);
   });
 
@@ -65,13 +61,29 @@ describe("GET /api/admin/creators", () => {
     const mockRows = [{ id: "1", name: "Bob", commissionOverridePercent: 0 }];
     const mockWhere = vi.fn().mockResolvedValue(mockRows);
     const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
-    (db.select as any).mockReturnValue({ from: mockFrom });
+    (db as any).select = vi.fn().mockReturnValue({ from: mockFrom });
 
     const res = await GET(makeRequest("/api/admin/creators?overrides=active"));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(mockWhere).toHaveBeenCalled();
+    expect(mockWhere).toHaveBeenCalledTimes(1);
+    expect(body).toEqual(mockRows);
+  });
+
+  it("filters by combined ?q= and ?overrides=active", async () => {
+    const mockRows = [{ id: "1", name: "Alice", commissionOverridePercent: 3 }];
+    const mockWhere = vi.fn().mockResolvedValue(mockRows);
+    const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
+    (db as any).select = vi.fn().mockReturnValue({ from: mockFrom });
+
+    const res = await GET(
+      makeRequest("/api/admin/creators?q=alice&overrides=active")
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockWhere).toHaveBeenCalledTimes(1);
     expect(body).toEqual(mockRows);
   });
 

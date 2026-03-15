@@ -135,8 +135,6 @@ export default async function ProductPage({ params }: Props) {
           />
         </div>
 
-        <FooshopBadge slug={slug} />
-
         <footer className="mt-16 text-sm opacity-50">
           <p>
             Sold by{" "}
@@ -160,6 +158,7 @@ export default async function ProductPage({ params }: Props) {
           </p>
         </footer>
       </main>
+      <FooshopBadge slug={slug} />
     </div>
   );
 }

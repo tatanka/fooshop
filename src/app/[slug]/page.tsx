@@ -307,8 +307,6 @@ export default async function StorePage({ params, searchParams }: Props) {
           <p className="text-center opacity-50">No products yet.</p>
         )}
 
-        <FooshopBadge slug={slug} />
-
         <footer className="mt-16 text-center text-sm opacity-50">
           <p>
             Powered by{" "}
@@ -328,6 +326,7 @@ export default async function StorePage({ params, searchParams }: Props) {
           </p>
         </footer>
       </main>
+      <FooshopBadge slug={slug} />
     </div>
   );
 }

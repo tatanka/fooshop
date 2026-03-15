@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /api
+Disallow: /checkout
+Sitemap: https://fooshop.ai/sitemap.xml

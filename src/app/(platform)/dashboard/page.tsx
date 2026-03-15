@@ -10,6 +10,7 @@ import Link from "next/link";
 import { StripeCTA } from "@/components/stripe-cta";
 import { StripeToast } from "@/components/stripe-toast";
 import { DashboardAnalytics } from "@/components/dashboard/dashboard-analytics";
+import { isOverrideActive } from "@/lib/commission";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -22,6 +23,11 @@ export default async function DashboardPage() {
     .then((rows) => rows[0]);
 
   if (!creator) redirect("/onboarding");
+
+  const hasActivePromotion = isOverrideActive(
+    creator.commissionOverridePercent,
+    creator.commissionOverrideExpiresAt
+  );
 
   const stripeCheckPromise = creator.stripeConnectId
     ? import("@/lib/stripe")
@@ -72,6 +78,30 @@ export default async function DashboardPage() {
       {!stripeReady && (
         <div className="mt-8 animate-fade-up stagger-4">
           <StripeCTA creatorId={creator.id} />
+        </div>
+      )}
+
+      {/* Commission override banner */}
+      {hasActivePromotion && (
+        <div className="mt-8 bg-green-50 border border-green-200 rounded-xl px-5 py-4 animate-fade-up stagger-4">
+          <p className="text-green-800 font-semibold">
+            {creator.commissionOverridePercent}% commission
+            {creator.commissionOverrideExpiresAt && (
+              <span className="font-normal text-green-700">
+                {" "}— Your early-bird promotion is active until{" "}
+                {new Date(creator.commissionOverrideExpiresAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            )}
+            {!creator.commissionOverrideExpiresAt && (
+              <span className="font-normal text-green-700">
+                {" "}— Your promotional rate is permanently active
+              </span>
+            )}
+          </p>
         </div>
       )}
 

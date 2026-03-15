@@ -143,6 +143,8 @@ export const creators = pgTable("creators", {
   storeName: text("store_name"),
   storeDescription: text("store_description"),
   storeTheme: jsonb("store_theme").$type<StoreTheme>(),
+  commissionOverridePercent: integer("commission_override_percent"),
+  commissionOverrideExpiresAt: timestamp("commission_override_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

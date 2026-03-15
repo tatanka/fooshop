@@ -1,14 +1,88 @@
-import "dotenv/config";
-import { db } from "../db";
-import { creators, products, orders } from "../db/schema";
-import { eq, or, ilike, isNotNull, count } from "drizzle-orm";
-import { isOverrideActive } from "../lib/commission";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
 
-type Creator = typeof creators.$inferSelect;
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type Config = { baseUrl: string; apiKey: string };
+
+type Creator = {
+  id: string;
+  email: string;
+  name: string;
+  slug: string;
+  storeName: string | null;
+  stripeConnectId: string | null;
+  commissionOverridePercent: number | null;
+  commissionOverrideExpiresAt: string | null;
+  createdAt: string;
+  productCount: number;
+  orderCount: number;
+  revenueCents: number;
+};
+
+// ─── Config ─────────────────────────────────────────────────────────────────
+
+export function loadConfig(): Config {
+  const baseUrl = process.env.FOOSHOP_BASE_URL;
+  const apiKey = process.env.FOOSHOP_API_KEY;
+
+  if (baseUrl && apiKey) {
+    return { baseUrl: baseUrl.replace(/\/$/, ""), apiKey };
+  }
+
+  const configPath = join(homedir(), ".fooshop", "config.json");
+  if (existsSync(configPath)) {
+    const file = JSON.parse(readFileSync(configPath, "utf-8"));
+    return {
+      baseUrl: (baseUrl ?? file.baseUrl ?? "").replace(/\/$/, ""),
+      apiKey: apiKey ?? file.apiKey ?? "",
+    };
+  }
+
+  console.error("Missing configuration. Create ~/.fooshop/config.json:");
+  console.error(JSON.stringify({ baseUrl: "https://fooshop-staging.onrender.com", apiKey: "fsk_..." }, null, 2));
+  console.error("\nOr set FOOSHOP_BASE_URL and FOOSHOP_API_KEY environment variables.");
+  process.exit(1);
+}
+
+// ─── HTTP helpers ───────────────────────────────────────────────────────────
+
+async function handleResponse(res: Response): Promise<unknown> {
+  if (res.ok) return res.json();
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("Invalid API key");
+  if (res.status === 403) throw new Error(`Insufficient permissions (requires ${(body as any).required ?? "admin scope"})`);
+  if (res.status === 404) throw new Error("Not found");
+  throw new Error(`Server error (${res.status})`);
+}
+
+export async function apiGet(config: Config, path: string): Promise<unknown> {
+  const res = await fetch(`${config.baseUrl}${path}`, {
+    headers: { Authorization: `Bearer ${config.apiKey}` },
+  }).catch(() => {
+    throw new Error(`Could not connect to ${config.baseUrl}`);
+  });
+  return handleResponse(res);
+}
+
+export async function apiPatch(config: Config, path: string, body: Record<string, unknown>): Promise<unknown> {
+  const res = await fetch(`${config.baseUrl}${path}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  }).catch(() => {
+    throw new Error(`Could not connect to ${config.baseUrl}`);
+  });
+  return handleResponse(res);
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function parseDuration(duration: string): Date | null {
+export function parseDuration(duration: string): Date | null {
   const months: Record<string, number> = {
     "3months": 3,
     "6months": 6,
@@ -16,62 +90,46 @@ function parseDuration(duration: string): Date | null {
   };
   if (duration === "permanent") return null;
   const m = months[duration];
-  if (!m) {
-    console.error(`Invalid duration: ${duration}. Use: 3months, 6months, 12months, permanent`);
-    process.exit(1);
-  }
+  if (!m) throw new Error(`Invalid duration: ${duration}. Use: 3months, 6months, 12months, permanent`);
   const date = new Date();
   date.setMonth(date.getMonth() + m);
   return date;
 }
 
+function formatOverride(c: Creator): string {
+  if (c.commissionOverridePercent === null) return "none";
+  if (c.commissionOverrideExpiresAt === null) return `${c.commissionOverridePercent}% until permanent`;
+  const expires = new Date(c.commissionOverrideExpiresAt);
+  if (expires <= new Date()) return "none (expired)";
+  return `${c.commissionOverridePercent}% until ${expires.toLocaleDateString()}`;
+}
+
 function formatCreator(c: Creator): string {
-  const override = isOverrideActive(c.commissionOverridePercent, c.commissionOverrideExpiresAt)
-    ? `${c.commissionOverridePercent}% until ${c.commissionOverrideExpiresAt?.toLocaleDateString() ?? "permanent"}`
-    : "none";
   return [
     `  Name:       ${c.name}`,
     `  Email:      ${c.email}`,
     `  Slug:       ${c.slug}`,
     `  Store:      ${c.storeName ?? "(no store name)"}`,
     `  Stripe:     ${c.stripeConnectId ?? "(not connected)"}`,
-    `  Override:   ${override}`,
-    `  Created:    ${c.createdAt.toLocaleDateString()}`,
+    `  Override:   ${formatOverride(c)}`,
+    `  Created:    ${new Date(c.createdAt).toLocaleDateString()}`,
   ].join("\n");
 }
 
-async function findCreator(query: string): Promise<Creator> {
-  const result = await db
-    .select()
-    .from(creators)
-    .where(
-      or(
-        eq(creators.email, query),
-        eq(creators.slug, query)
-      )
-    )
-    .then((rows) => rows[0]);
-
-  if (!result) {
+export async function findCreator(config: Config, query: string): Promise<Creator> {
+  const results = (await apiGet(config, `/api/admin/creators?q=${encodeURIComponent(query)}`)) as Creator[];
+  const match = results.find((c) => c.email === query || c.slug === query);
+  if (!match) {
     console.error(`Creator not found: ${query}`);
     process.exit(1);
   }
-  return result;
+  return match;
 }
 
 // ─── Commands ───────────────────────────────────────────────────────────────
 
-async function cmdSearch(query: string) {
-  const results = await db
-    .select()
-    .from(creators)
-    .where(
-      or(
-        ilike(creators.name, `%${query}%`),
-        ilike(creators.email, `%${query}%`),
-        ilike(creators.slug, `%${query}%`)
-      )
-    );
+async function cmdSearch(config: Config, query: string) {
+  const results = (await apiGet(config, `/api/admin/creators?q=${encodeURIComponent(query)}`)) as Creator[];
 
   if (results.length === 0) {
     console.log("No creators found.");
@@ -84,26 +142,16 @@ async function cmdSearch(query: string) {
   }
 }
 
-async function cmdInfo(query: string) {
-  const c = await findCreator(query);
-
-  const [productCount] = await db
-    .select({ value: count() })
-    .from(products)
-    .where(eq(products.creatorId, c.id));
-
-  const [orderCount] = await db
-    .select({ value: count() })
-    .from(orders)
-    .where(eq(orders.creatorId, c.id));
+async function cmdInfo(config: Config, query: string) {
+  const c = await findCreator(config, query);
 
   console.log(`Creator: ${c.name}\n`);
   console.log(formatCreator(c));
-  console.log(`  Products:   ${productCount.value}`);
-  console.log(`  Orders:     ${orderCount.value}`);
+  console.log(`  Products:   ${c.productCount}`);
+  console.log(`  Orders:     ${c.orderCount}`);
 }
 
-async function cmdSetCommission(query: string, percentStr: string, duration: string) {
+async function cmdSetCommission(config: Config, query: string, percentStr: string, duration: string) {
   const percent = parseInt(percentStr, 10);
   if (isNaN(percent) || percent < 0 || percent > 100) {
     console.error("Percent must be an integer between 0 and 100.");
@@ -111,80 +159,80 @@ async function cmdSetCommission(query: string, percentStr: string, duration: str
   }
 
   const expiresAt = parseDuration(duration);
-  const c = await findCreator(query);
+  const c = await findCreator(config, query);
 
-  await db
-    .update(creators)
-    .set({
-      commissionOverridePercent: percent,
-      commissionOverrideExpiresAt: expiresAt,
-    })
-    .where(eq(creators.id, c.id));
+  await apiPatch(config, `/api/admin/creators/${c.id}`, {
+    commissionOverridePercent: percent,
+    commissionOverrideExpiresAt: expiresAt?.toISOString() ?? null,
+  });
 
   const expiryLabel = expiresAt ? expiresAt.toLocaleDateString() : "permanent";
   console.log(`Set ${percent}% commission for ${c.name} (${c.email}), expires: ${expiryLabel}`);
 }
 
-async function cmdRemoveCommission(query: string) {
-  const c = await findCreator(query);
+async function cmdRemoveCommission(config: Config, query: string) {
+  const c = await findCreator(config, query);
 
-  await db
-    .update(creators)
-    .set({
-      commissionOverridePercent: null,
-      commissionOverrideExpiresAt: null,
-    })
-    .where(eq(creators.id, c.id));
+  await apiPatch(config, `/api/admin/creators/${c.id}`, {
+    commissionOverridePercent: null,
+    commissionOverrideExpiresAt: null,
+  });
 
   console.log(`Removed commission override for ${c.name} (${c.email}). Back to default 5%.`);
 }
 
-async function cmdListOverrides() {
-  const results = await db
-    .select()
-    .from(creators)
-    .where(isNotNull(creators.commissionOverridePercent));
+async function cmdListOverrides(config: Config) {
+  const results = (await apiGet(config, "/api/admin/creators?overrides=active")) as Creator[];
 
-  const active = results.filter((c) => isOverrideActive(c.commissionOverridePercent, c.commissionOverrideExpiresAt));
-
-  if (active.length === 0) {
+  if (results.length === 0) {
     console.log("No active commission overrides.");
     return;
   }
 
-  console.log(`${active.length} active override(s):\n`);
-  for (const c of active) {
-    const expiry = c.commissionOverrideExpiresAt?.toLocaleDateString() ?? "permanent";
+  console.log(`${results.length} active override(s):\n`);
+  for (const c of results) {
+    const expiry = c.commissionOverrideExpiresAt
+      ? new Date(c.commissionOverrideExpiresAt).toLocaleDateString()
+      : "permanent";
     console.log(`- ${c.name} (${c.email}): ${c.commissionOverridePercent}% until ${expiry}`);
   }
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
-const [command, ...args] = process.argv.slice(2);
+function main() {
+  const [command, ...args] = process.argv.slice(2);
 
-const commands: Record<string, () => Promise<void>> = {
-  search: () => cmdSearch(args[0]),
-  info: () => cmdInfo(args[0]),
-  "set-commission": () => cmdSetCommission(args[0], args[1], args[2]),
-  "remove-commission": () => cmdRemoveCommission(args[0]),
-  "list-overrides": () => cmdListOverrides(),
-};
+  if (!command || !["search", "info", "set-commission", "remove-commission", "list-overrides"].includes(command)) {
+    console.log("Usage:");
+    console.log("  creators-admin search <query>");
+    console.log("  creators-admin info <email-or-slug>");
+    console.log("  creators-admin set-commission <email-or-slug> <percent> <duration>");
+    console.log("  creators-admin remove-commission <email-or-slug>");
+    console.log("  creators-admin list-overrides");
+    console.log("\nDurations: 3months, 6months, 12months, permanent");
+    process.exit(command ? 1 : 0);
+  }
 
-if (!command || !commands[command]) {
-  console.log("Usage:");
-  console.log("  creators-admin search <query>");
-  console.log("  creators-admin info <email-or-slug>");
-  console.log("  creators-admin set-commission <email-or-slug> <percent> <duration>");
-  console.log("  creators-admin remove-commission <email-or-slug>");
-  console.log("  creators-admin list-overrides");
-  console.log("\nDurations: 3months, 6months, 12months, permanent");
-  process.exit(command ? 1 : 0);
+  const config = loadConfig();
+
+  const commands: Record<string, () => Promise<void>> = {
+    search: () => cmdSearch(config, args[0]),
+    info: () => cmdInfo(config, args[0]),
+    "set-commission": () => cmdSetCommission(config, args[0], args[1], args[2]),
+    "remove-commission": () => cmdRemoveCommission(config, args[0]),
+    "list-overrides": () => cmdListOverrides(config),
+  };
+
+  commands[command]()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("Error:", err.message);
+      process.exit(1);
+    });
 }
 
-commands[command]()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("Error:", err);
-    process.exit(1);
-  });
+const isMainModule = process.argv[1]?.endsWith("creators-admin.ts") || process.argv[1]?.endsWith("creators-admin.js");
+if (isMainModule) {
+  main();
+}

@@ -53,7 +53,9 @@ export async function PATCH(
   if (body.commissionOverridePercent !== undefined)
     allowedFields.commissionOverridePercent = body.commissionOverridePercent;
   if (body.commissionOverrideExpiresAt !== undefined)
-    allowedFields.commissionOverrideExpiresAt = body.commissionOverrideExpiresAt;
+    allowedFields.commissionOverrideExpiresAt = body.commissionOverrideExpiresAt
+      ? new Date(body.commissionOverrideExpiresAt)
+      : null;
 
   if (Object.keys(allowedFields).length === 0) {
     return NextResponse.json(

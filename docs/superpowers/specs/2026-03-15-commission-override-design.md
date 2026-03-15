@@ -14,8 +14,10 @@ La strategia di lancio prevede "0% commissione per i primi 3/6 mesi" come incent
 
 Due campi nuovi sulla tabella `creators`:
 
-- `commission_override_percent` (integer, nullable) — commissione override in percentuale (0 = zero commissione). `null` = usa il default 5%.
+- `commission_override_percent` (integer, nullable, range 0-100) — commissione override in percentuale (0 = zero commissione). `null` = usa il default 5%.
 - `commission_override_expires_at` (timestamp with timezone, nullable) — scadenza dell'override. `null` con override attivo = nessuna scadenza.
+
+**Validazione:** `commission_override_percent` deve essere nell'intervallo 0-100. Enforcement a livello di CLI script (non DB constraint, per semplicita').
 
 **Override attivo quando:** `commission_override_percent` IS NOT NULL AND (`commission_override_expires_at` IS NULL OR `commission_override_expires_at` > NOW()).
 
@@ -38,8 +40,10 @@ Logica:
 2. Altrimenti → 5% default
 
 Caller da aggiornare:
-- `src/app/api/checkout/route.ts` (riga 121) — passa il creator record
-- `src/app/api/stripe/webhook/route.ts` (riga 52) — passa il creator record
+- `src/app/api/checkout/route.ts` (riga 121) — passa il creator record (gia' disponibile in scope)
+- `src/app/api/stripe/webhook/route.ts` (riga 52) — serve aggiungere una query per fetchare il creator record (attualmente ha solo `creatorId` dal metadata)
+
+**Nota sul webhook:** Il fee reale addebitato da Stripe e' quello calcolato al checkout (via `application_fee_amount`). Il webhook ricalcola indipendentemente per salvare `platformFeeCents` nell'ordine. Con override time-sensitive, potrebbe esserci divergenza se l'override scade tra checkout e webhook. Soluzione: nel webhook, leggere `application_fee_amount` direttamente dalla Stripe session invece di ricalcolare. Questo elimina la possibilita' di mismatch.
 
 ### 3. Dashboard — Banner promozione
 
@@ -56,11 +60,13 @@ Skill Claude Code per gestione admin creator con focus su commission override.
 **Comandi:**
 - `/creators search <query>` — cerca per nome, email o slug
 - `/creators info <email-or-slug>` — dettagli completi (nome, store, Stripe status, prodotti count, ordini count, override attivo)
-- `/creators set-commission <email-or-slug> <percent> <duration>` — setta override (durate: `3months`, `6months`, `12months`)
+- `/creators set-commission <email-or-slug> <percent> <duration>` — setta override (durate: `3months`, `6months`, `12months`, `permanent`)
 - `/creators remove-commission <email-or-slug>` — rimuove override (setta entrambi i campi a null)
 - `/creators list-overrides` — tutti i creator con override attivo
 
-**Implementazione:** script Node.js `src/scripts/creators-admin.ts` che si connette al DB direttamente (come `seed.ts`). La skill lo invoca via Bash con i parametri appropriati.
+**Implementazione:** script Node.js `src/scripts/creators-admin.ts` che si connette al DB direttamente (usa `dotenv/config` e il client DB condiviso da `src/db/index.ts`, come `seed.ts`). La skill lo invoca via Bash con i parametri appropriati. Supporta `DATABASE_URL` env override per uso in produzione.
+
+**Migrazione:** `pnpm drizzle-kit generate` + `pnpm drizzle-kit push`. Colonne nullable, quindi non-destructive e non richiede default.
 
 ## Out of scope
 

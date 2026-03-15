@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { r2PublicUrl } from "@/lib/r2-url";
 import { ReferralTracker } from "@/components/referral-tracker";
+import { FooshopBadge } from "@/components/fooshop-badge";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -306,8 +307,20 @@ export default async function StorePage({ params, searchParams }: Props) {
           <p className="text-center opacity-50">No products yet.</p>
         )}
 
-        <footer className="mt-16 text-center text-sm opacity-40">
-          <p>Powered by Fooshop</p>
+        <FooshopBadge slug={slug} />
+
+        <footer className="mt-16 text-center text-sm opacity-50">
+          <p>
+            Powered by{" "}
+            <a
+              href={`/?ref=store-footer&store=${encodeURIComponent(slug)}`}
+              className="underline hover:opacity-70"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Fooshop
+            </a>
+          </p>
           <p className="mt-2">
             <a href="/legal/terms" className="underline hover:opacity-70">Terms</a>
             {" · "}

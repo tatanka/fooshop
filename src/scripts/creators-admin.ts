@@ -34,10 +34,16 @@ export function loadConfig(): Config {
   const configPath = join(homedir(), ".fooshop", "config.json");
   if (existsSync(configPath)) {
     const file = JSON.parse(readFileSync(configPath, "utf-8"));
-    return {
+    const merged = {
       baseUrl: (baseUrl ?? file.baseUrl ?? "").replace(/\/$/, ""),
       apiKey: apiKey ?? file.apiKey ?? "",
     };
+    if (!merged.baseUrl || !merged.apiKey) {
+      console.error("Missing configuration: baseUrl and apiKey must both be set.");
+      console.error("Update ~/.fooshop/config.json or set FOOSHOP_BASE_URL and FOOSHOP_API_KEY.");
+      process.exit(1);
+    }
+    return merged;
   }
 
   console.error("Missing configuration. Create ~/.fooshop/config.json:");
@@ -119,10 +125,7 @@ function formatCreator(c: Creator): string {
 export async function findCreator(config: Config, query: string): Promise<Creator> {
   const results = (await apiGet(config, `/api/admin/creators?q=${encodeURIComponent(query)}`)) as Creator[];
   const match = results.find((c) => c.email === query || c.slug === query);
-  if (!match) {
-    console.error(`Creator not found: ${query}`);
-    process.exit(1);
-  }
+  if (!match) throw new Error(`Creator not found: ${query}`);
   return match;
 }
 
@@ -154,8 +157,7 @@ async function cmdInfo(config: Config, query: string) {
 async function cmdSetCommission(config: Config, query: string, percentStr: string, duration: string) {
   const percent = parseInt(percentStr, 10);
   if (isNaN(percent) || percent < 0 || percent > 100) {
-    console.error("Percent must be an integer between 0 and 100.");
-    process.exit(1);
+    throw new Error("Percent must be an integer between 0 and 100.");
   }
 
   const expiresAt = parseDuration(duration);

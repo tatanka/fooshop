@@ -161,4 +161,15 @@ describe("findCreator", () => {
     const result = await findCreator(config, "alice");
     expect(result.id).toBe("1");
   });
+
+  it("throws when no exact match found", async () => {
+    const creators = [
+      { id: "1", email: "bob@test.com", slug: "bob", name: "Bob" },
+    ];
+    const mockResponse = { ok: true, status: 200, json: () => Promise.resolve(creators) };
+    (fetch as any).mockResolvedValue(mockResponse);
+
+    const config = { baseUrl: "https://example.com", apiKey: "fsk_test" };
+    await expect(findCreator(config, "alice@test.com")).rejects.toThrow("Creator not found: alice@test.com");
+  });
 });

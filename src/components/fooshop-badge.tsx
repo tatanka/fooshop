@@ -1,5 +1,3 @@
-"use client";
-
 export function FooshopBadge({ slug }: { slug: string }) {
   const href = `/?ref=store-badge&store=${encodeURIComponent(slug)}`;
 
@@ -23,7 +21,7 @@ export function FooshopBadge({ slug }: { slug: string }) {
       >
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
       </svg>
-      Sell on <strong className="font-semibold">Fooshop</strong> — it&apos;s free
+      Sell on <span className="font-semibold">Fooshop</span> — it&apos;s free
     </a>
   );
 }

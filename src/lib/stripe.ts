@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getEffectiveCommissionPercent, type CommissionOverride } from "./commission";
 
 let _stripe: Stripe | null = null;
 
@@ -11,8 +12,10 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-const PLATFORM_FEE_PERCENT = 5;
-
-export function calculatePlatformFee(amountCents: number): number {
-  return Math.round((amountCents * PLATFORM_FEE_PERCENT) / 100);
+export function calculatePlatformFee(
+  amountCents: number,
+  creator?: CommissionOverride
+): number {
+  const percent = getEffectiveCommissionPercent(creator);
+  return Math.round((amountCents * percent) / 100);
 }

@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { BuyButton } from "@/components/buy-button";
 import { r2PublicUrl } from "@/lib/r2-url";
 import { ReferralTracker } from "@/components/referral-tracker";
+import { FooshopBadge } from "@/components/fooshop-badge";
 
 interface Props {
   params: Promise<{ slug: string; productSlug: string }>;
@@ -134,13 +135,23 @@ export default async function ProductPage({ params }: Props) {
           />
         </div>
 
-        <footer className="mt-16 text-sm opacity-40">
+        <FooshopBadge slug={slug} />
+
+        <footer className="mt-16 text-sm opacity-50">
           <p>
             Sold by{" "}
             <a href={`/${slug}`} className="underline">
               {creator.storeName}
             </a>{" "}
-            on Fooshop
+            on{" "}
+            <a
+              href={`/?ref=product-footer&store=${encodeURIComponent(slug)}`}
+              className="underline hover:opacity-70"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Fooshop
+            </a>
           </p>
           <p className="mt-2">
             <a href="/legal/terms" className="underline hover:opacity-70">Terms</a>

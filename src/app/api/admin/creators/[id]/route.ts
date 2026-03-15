@@ -50,6 +50,10 @@ export async function PATCH(
   if (body.storeName !== undefined) allowedFields.storeName = body.storeName;
   if (body.storeDescription !== undefined)
     allowedFields.storeDescription = body.storeDescription;
+  if (body.commissionOverridePercent !== undefined)
+    allowedFields.commissionOverridePercent = body.commissionOverridePercent;
+  if (body.commissionOverrideExpiresAt !== undefined)
+    allowedFields.commissionOverrideExpiresAt = body.commissionOverrideExpiresAt;
 
   if (Object.keys(allowedFields).length === 0) {
     return NextResponse.json(

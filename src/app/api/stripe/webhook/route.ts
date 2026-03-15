@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { getStripe, calculatePlatformFee } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { db } from "@/db";
 import { orders, downloadTokens, products, creators, referrals, referralConversions } from "@/db/schema";
 import { sendPurchaseConfirmation } from "@/lib/email";
@@ -40,6 +40,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // Read the actual application fee from Stripe (authoritative, set at checkout time)
+    const paymentIntent = await getStripe().paymentIntents.retrieve(
+      session.payment_intent as string
+    );
+    const actualPlatformFee = paymentIntent.application_fee_amount ?? 0;
+
     try {
       // Existing transaction — capture order
       const [order] = await db.transaction(async (tx) => {
@@ -49,7 +55,7 @@ export async function POST(req: NextRequest) {
           buyerEmail: session.customer_details?.email ?? "unknown",
           buyerName: session.customer_details?.name,
           amountCents: session.amount_total!,
-          platformFeeCents: calculatePlatformFee(session.amount_total!),
+          platformFeeCents: actualPlatformFee,
           stripePaymentIntentId: session.payment_intent as string,
           couponId: couponId || null,
           status: "completed",

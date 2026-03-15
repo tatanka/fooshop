@@ -11,7 +11,9 @@
     "lint": "eslint",
     "seed": "tsx src/scripts/seed.ts",
     "smoke": "vitest run --config vitest.config.smoke.ts",
-    "generate-api-key": "tsx src/scripts/generate-api-key.ts"
+    "generate-api-key": "tsx src/scripts/generate-api-key.ts",
+    "creators-admin": "tsx src/scripts/creators-admin.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

@@ -37,16 +37,16 @@ const ORDER_IDS = [
 // ─── Seed data ──────────────────────────────────────────────────────────────
 
 const seedUsers = [
-  { id: USER_IDS[0], name: "Alice Demo", email: "alice@demo.test" },
-  { id: USER_IDS[1], name: "Bob Demo", email: "bob@demo.test" },
-  { id: USER_IDS[2], name: "Carol Demo", email: "carol@demo.test" },
+  { id: USER_IDS[0], name: "Alice Demo", email: "alice@example.org" },
+  { id: USER_IDS[1], name: "Bob Demo", email: "bob@example.org" },
+  { id: USER_IDS[2], name: "Carol Demo", email: "carol@example.org" },
 ];
 
 const seedCreators = [
   {
     id: CREATOR_IDS[0],
     userId: USER_IDS[0],
-    email: "alice@demo.test",
+    email: "alice@example.org",
     name: "Alice Demo",
     slug: "alice-demo",
     storeName: "Alice's Digital Shop",
@@ -61,11 +61,13 @@ const seedCreators = [
       heroStyle: "gradient" as const,
       layout: "grid" as const,
     },
+    commissionOverridePercent: 0,
+    commissionOverrideExpiresAt: new Date("2026-09-15T00:00:00Z"),
   },
   {
     id: CREATOR_IDS[1],
     userId: USER_IDS[1],
-    email: "bob@demo.test",
+    email: "bob@example.org",
     name: "Bob Demo",
     slug: "bob-demo",
     storeName: "Bob's Creative Hub",
@@ -84,7 +86,7 @@ const seedCreators = [
   {
     id: CREATOR_IDS[2],
     userId: USER_IDS[2],
-    email: "carol@demo.test",
+    email: "carol@example.org",
     name: "Carol Demo",
     slug: "carol-demo",
     storeName: "Carol's Template Studio",

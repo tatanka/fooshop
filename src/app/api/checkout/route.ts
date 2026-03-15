@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const platformFee = calculatePlatformFee(finalPriceCents);
+  const platformFee = calculatePlatformFee(finalPriceCents, creator);
 
   try {
     const checkoutSession = await getStripe().checkout.sessions.create({

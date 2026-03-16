@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { creators, products, pageViews } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 interface Context {
   params: Promise<{ slug: string }>;
 }
 
 export async function GET(req: NextRequest, context: Context) {
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "stores",
+    limit: 60,
+    windowMs: 60_000,
+    keyStrategy: "ip",
+  });
+  if (rateLimitResult) return rateLimitResult;
+
   const { slug } = await context.params;
   const source = new URL(req.url).searchParams.get("source") ?? "web";
 

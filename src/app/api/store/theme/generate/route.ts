@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { generateTheme } from "@/lib/ai";
 import { validateTheme } from "@/lib/theme";
 
@@ -8,6 +9,15 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "store-theme-generate",
+    limit: 5,
+    windowMs: 60_000,
+    keyStrategy: "both",
+    userId: session.user.id,
+  });
+  if (rateLimitResult) return rateLimitResult;
 
   const body = await req.json();
   const { prompt } = body;

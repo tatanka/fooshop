@@ -3,8 +3,17 @@ import { db } from "@/db";
 import { coupons, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { applyDiscount } from "@/lib/coupon";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "coupons-validate",
+    limit: 20,
+    windowMs: 60_000,
+    keyStrategy: "ip",
+  });
+  if (rateLimitResult) return rateLimitResult;
+
   const { code, productId } = await req.json();
 
   if (!code || !productId) {

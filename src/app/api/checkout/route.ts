@@ -4,8 +4,17 @@ import { applyDiscount } from "@/lib/coupon";
 import { db } from "@/db";
 import { products, creators, coupons, referrals } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "checkout",
+    limit: 10,
+    windowMs: 60_000,
+    keyStrategy: "ip",
+  });
+  if (rateLimitResult) return rateLimitResult;
+
   const { productId, couponCode, referralCode, source } = await req.json();
 
   const product = await db

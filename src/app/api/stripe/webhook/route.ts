@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getStripe } from "@/lib/stripe";
@@ -137,12 +138,20 @@ export async function POST(req: NextRequest) {
         }
       } catch (emailError) {
         // Email failure must not break the webhook — order is already saved
+        Sentry.captureException(emailError, {
+          tags: { flow: "webhook", "webhook.event": "checkout.session.completed", step: "email" },
+          extra: { orderId: order.id },
+        });
         console.error("Webhook: failed to send purchase email", {
           orderId: order.id,
           error: emailError,
         });
       }
     } catch (error) {
+      Sentry.captureException(error, {
+        tags: { flow: "webhook", "webhook.event": "checkout.session.completed" },
+        extra: { sessionId: session.id, paymentIntentId: session.payment_intent },
+      });
       console.error("Webhook: failed to process checkout.session.completed", {
         sessionId: session.id,
         error,
@@ -198,6 +207,10 @@ export async function POST(req: NextRequest) {
           .where(eq(downloadTokens.orderId, order.id));
       });
     } catch (error) {
+      Sentry.captureException(error, {
+        tags: { flow: "webhook", "webhook.event": "charge.refunded" },
+        extra: { chargeId: charge.id, orderId: order.id, paymentIntentId },
+      });
       console.error("Webhook: failed to process charge.refunded", {
         chargeId: charge.id,
         orderId: order.id,

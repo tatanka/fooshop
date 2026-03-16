@@ -21,6 +21,7 @@
     "@aws-sdk/client-s3": "^3.1004.0",
     "@aws-sdk/s3-request-presigner": "^3.1004.0",
     "@react-email/components": "^1.0.8",
+    "@sentry/nextjs": "^10.43.0",
     "@stripe/stripe-js": "^8.9.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",

@@ -3,8 +3,17 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { products, creators, pageViews } from "@/db/schema";
 import { eq, and, or, ilike, lte, desc } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "products",
+    limit: 60,
+    windowMs: 60_000,
+    keyStrategy: "ip",
+  });
+  if (rateLimitResult) return rateLimitResult;
+
   // If ?mine=true, return authenticated creator's products
   if (req.nextUrl.searchParams.get("mine") === "true") {
     const session = await auth();

@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { buyIntents, products } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "buy-intents",
+    limit: 30,
+    windowMs: 60_000,
+    keyStrategy: "ip",
+  });
+  if (rateLimitResult) return rateLimitResult;
+
   const { productId } = await req.json();
 
   if (!productId) {

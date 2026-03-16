@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { downloadTokens, orders, products } from "@/db/schema";
@@ -35,13 +36,22 @@ export async function GET(
   }
 
   // Increment download count and generate presigned URL in parallel
-  const [, presignedUrl] = await Promise.all([
-    db
-      .update(downloadTokens)
-      .set({ downloadCount: sql`${downloadTokens.downloadCount} + 1` })
-      .where(eq(downloadTokens.id, result.tokenId)),
-    getDownloadUrl(result.fileUrl),
-  ]);
+  try {
+    const [, presignedUrl] = await Promise.all([
+      db
+        .update(downloadTokens)
+        .set({ downloadCount: sql`${downloadTokens.downloadCount} + 1` })
+        .where(eq(downloadTokens.id, result.tokenId)),
+      getDownloadUrl(result.fileUrl),
+    ]);
 
-  return NextResponse.redirect(presignedUrl);
+    return NextResponse.redirect(presignedUrl);
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { flow: "download" },
+      extra: { tokenId: result.tokenId, fileUrl: result.fileUrl },
+    });
+    console.error("Download failed:", error);
+    return NextResponse.json({ error: "Download failed" }, { status: 500 });
+  }
 }

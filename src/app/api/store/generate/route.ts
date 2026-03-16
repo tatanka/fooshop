@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  Sentry.setUser({ id: session.user.id });
+
   const rateLimitResult = await rateLimit(req, {
     endpoint: "store-generate",
     limit: 5,
@@ -28,34 +31,43 @@ export async function POST(req: NextRequest) {
   const result = storeGenerateSchema.safeParse(body);
   if (!result.success) return validationError(result.error);
 
-  const { description } = result.data;
-  const generated = await generateStore(description);
+  try {
+    const { description } = result.data;
+    const generated = await generateStore(description);
 
-  const slug = generated.storeName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    const slug = generated.storeName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
 
-  await db
-    .insert(creators)
-    .values({
-      userId: session.user.id,
-      email: session.user.email!,
-      name: session.user.name ?? session.user.email!,
-      storeName: generated.storeName,
-      storeDescription: generated.storeDescription,
-      storeTheme: generated.theme,
-      slug,
-    })
-    .onConflictDoUpdate({
-      target: creators.userId,
-      set: {
+    await db
+      .insert(creators)
+      .values({
+        userId: session.user.id,
+        email: session.user.email!,
+        name: session.user.name ?? session.user.email!,
         storeName: generated.storeName,
         storeDescription: generated.storeDescription,
         storeTheme: generated.theme,
         slug,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: creators.userId,
+        set: {
+          storeName: generated.storeName,
+          storeDescription: generated.storeDescription,
+          storeTheme: generated.theme,
+          slug,
+        },
+      });
 
-  return NextResponse.json({ ...generated, slug });
+    return NextResponse.json({ ...generated, slug });
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { flow: "store-generate" },
+      extra: { userId: session.user.id },
+    });
+    console.error("Store generation failed:", error);
+    return NextResponse.json({ error: "Store generation failed" }, { status: 500 });
+  }
 }

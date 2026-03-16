@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { products, creators, pageViews } from "@/db/schema";
 import { eq, and, or, ilike, lte, desc } from "drizzle-orm";
 import { rateLimit } from "@/lib/rate-limit";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { productCreateSchema } from "@/lib/validations/products";
 
 export async function GET(req: NextRequest) {
   const rateLimitResult = await rateLimit(req, {
@@ -92,7 +94,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = productCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+
   const creator = await db
     .select()
     .from(creators)
@@ -103,7 +109,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Creator not found" }, { status: 404 });
   }
 
-  const slug = body.title
+  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = result.data;
+
+  const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
@@ -112,14 +120,14 @@ export async function POST(req: NextRequest) {
     .insert(products)
     .values({
       creatorId: creator.id,
-      title: body.title,
+      title,
       slug,
-      description: body.description,
-      priceCents: body.priceCents,
-      category: body.category,
-      status: body.status ?? "published",
-      fileUrl: body.fileUrl ?? null,
-      coverImageUrl: body.coverImageUrl ?? null,
+      description: description ?? "",
+      priceCents,
+      category: category ?? null,
+      status: status ?? "published",
+      fileUrl: fileUrl ?? null,
+      coverImageUrl: coverImageUrl ?? null,
     })
     .returning();
 

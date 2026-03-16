@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  Sentry.setUser({ id: session.user.id });
 
   const rateLimitResult = await rateLimit(req, {
     endpoint: "upload",
@@ -34,8 +37,16 @@ export async function POST(req: NextRequest) {
   const maxMB = purpose === "cover" ? MAX_COVER_SIZE_MB : MAX_FILE_SIZE_MB;
   const maxBytes = maxMB * 1024 * 1024;
 
-  const key = `products/${session.user.id}/${randomUUID()}/${safeName}`;
-  const uploadUrl = await getUploadUrl(key, contentType);
-
-  return NextResponse.json({ uploadUrl, key, maxSizeBytes: maxBytes });
+  try {
+    const key = `products/${session.user.id}/${randomUUID()}/${safeName}`;
+    const uploadUrl = await getUploadUrl(key, contentType);
+    return NextResponse.json({ uploadUrl, key, maxSizeBytes: maxBytes });
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { flow: "upload" },
+      extra: { userId: session.user.id, filename: safeName, purpose },
+    });
+    console.error("Upload presigned URL generation failed:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 }

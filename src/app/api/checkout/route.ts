@@ -178,11 +178,11 @@ export async function POST(req: NextRequest) {
         .set({ redemptionCount: sql`${coupons.redemptionCount} - 1` })
         .where(eq(coupons.id, couponId))
         .catch((rollbackErr) => {
-          console.error("Failed to rollback coupon redemption:", rollbackErr);
           Sentry.captureException(rollbackErr, {
             tags: { flow: "checkout", step: "coupon-rollback" },
             extra: { couponId },
           });
+          console.error("Failed to rollback coupon redemption:", rollbackErr);
         });
     }
     Sentry.captureException(err, {

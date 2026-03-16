@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { creators, referrals, referralConversions, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { referralUpdateSchema } from "@/lib/validations/referrals";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -25,30 +27,18 @@ export async function PUT(req: NextRequest, { params }: Props) {
   }
 
   const { id } = await params;
-  const body = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = referralUpdateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
   const allowedFields: Record<string, unknown> = {};
-  if (body.affiliateName !== undefined) allowedFields.affiliateName = body.affiliateName.trim();
-  if (body.affiliateEmail !== undefined) allowedFields.affiliateEmail = body.affiliateEmail?.trim() || null;
-  if (body.commissionPercent !== undefined) {
-    if (
-      typeof body.commissionPercent !== "number" ||
-      !Number.isInteger(body.commissionPercent) ||
-      body.commissionPercent < 1 ||
-      body.commissionPercent > 100
-    ) {
-      return NextResponse.json(
-        { error: "Commission must be an integer between 1 and 100" },
-        { status: 400 }
-      );
-    }
-    allowedFields.commissionPercent = body.commissionPercent;
-  }
-  if (body.active !== undefined && typeof body.active === "boolean") {
-    allowedFields.active = body.active;
-  }
-  if (body.productId !== undefined) {
-    const pid = body.productId || null;
+  if (result.data.affiliateName !== undefined) allowedFields.affiliateName = result.data.affiliateName;
+  if (result.data.affiliateEmail !== undefined) allowedFields.affiliateEmail = result.data.affiliateEmail;
+  if (result.data.commissionPercent !== undefined) allowedFields.commissionPercent = result.data.commissionPercent;
+  if (result.data.active !== undefined) allowedFields.active = result.data.active;
+  if (result.data.productId !== undefined) {
+    const pid = result.data.productId;
     if (pid) {
       const product = await db
         .select({ id: products.id })
@@ -61,10 +51,6 @@ export async function PUT(req: NextRequest, { params }: Props) {
       }
     }
     allowedFields.productId = pid;
-  }
-
-  if (Object.keys(allowedFields).length === 0) {
-    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
   const updated = await db

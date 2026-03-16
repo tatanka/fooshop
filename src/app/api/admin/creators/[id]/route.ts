@@ -3,6 +3,8 @@ import { validateApiKey, hasScope, insufficientScope } from "@/lib/api-key";
 import { db } from "@/db";
 import { creators } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { adminCreatorUpdateSchema } from "@/lib/validations/admin";
 
 const SCOPE = "admin:write:creators";
 
@@ -42,27 +44,24 @@ export async function PATCH(
   if (!hasScope(auth, SCOPE)) return insufficientScope(SCOPE);
 
   const { id } = await params;
-  const body = await req.json();
+
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = adminCreatorUpdateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
   const allowedFields: Record<string, unknown> = {};
-  if (body.name !== undefined) allowedFields.name = body.name;
-  if (body.email !== undefined) allowedFields.email = body.email;
-  if (body.storeName !== undefined) allowedFields.storeName = body.storeName;
-  if (body.storeDescription !== undefined)
-    allowedFields.storeDescription = body.storeDescription;
-  if (body.commissionOverridePercent !== undefined)
-    allowedFields.commissionOverridePercent = body.commissionOverridePercent;
-  if (body.commissionOverrideExpiresAt !== undefined)
-    allowedFields.commissionOverrideExpiresAt = body.commissionOverrideExpiresAt
-      ? new Date(body.commissionOverrideExpiresAt)
+  if (result.data.name !== undefined) allowedFields.name = result.data.name;
+  if (result.data.email !== undefined) allowedFields.email = result.data.email;
+  if (result.data.storeName !== undefined) allowedFields.storeName = result.data.storeName;
+  if (result.data.storeDescription !== undefined)
+    allowedFields.storeDescription = result.data.storeDescription;
+  if (result.data.commissionOverridePercent !== undefined)
+    allowedFields.commissionOverridePercent = result.data.commissionOverridePercent;
+  if (result.data.commissionOverrideExpiresAt !== undefined)
+    allowedFields.commissionOverrideExpiresAt = result.data.commissionOverrideExpiresAt
+      ? new Date(result.data.commissionOverrideExpiresAt)
       : null;
-
-  if (Object.keys(allowedFields).length === 0) {
-    return NextResponse.json(
-      { error: "No valid fields to update" },
-      { status: 400 }
-    );
-  }
 
   const [updated] = await db
     .update(creators)

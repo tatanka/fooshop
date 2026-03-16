@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { creators, coupons } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { couponUpdateSchema } from "@/lib/validations/coupons";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -25,18 +27,17 @@ export async function PUT(req: NextRequest, { params }: Props) {
   }
 
   const { id } = await params;
-  const body = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = couponUpdateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
   // Only allow updating specific fields
   const allowedFields: Record<string, unknown> = {};
-  if (body.active !== undefined) allowedFields.active = body.active;
-  if (body.maxRedemptions !== undefined) allowedFields.maxRedemptions = body.maxRedemptions || null;
-  if (body.expiresAt !== undefined) allowedFields.expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
-  if (body.minAmountCents !== undefined) allowedFields.minAmountCents = body.minAmountCents || null;
-
-  if (Object.keys(allowedFields).length === 0) {
-    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
-  }
+  if (result.data.active !== undefined) allowedFields.active = result.data.active;
+  if (result.data.maxRedemptions !== undefined) allowedFields.maxRedemptions = result.data.maxRedemptions;
+  if (result.data.expiresAt !== undefined) allowedFields.expiresAt = result.data.expiresAt ? new Date(result.data.expiresAt) : null;
+  if (result.data.minAmountCents !== undefined) allowedFields.minAmountCents = result.data.minAmountCents;
 
   const updated = await db
     .update(coupons)

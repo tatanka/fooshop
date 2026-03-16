@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { creators, coupons, products } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { generateCouponCode } from "@/lib/coupon";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { couponCreateSchema } from "@/lib/validations/coupons";
 
 export async function GET() {
   const session = await auth();
@@ -50,7 +52,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Creator not found" }, { status: 404 });
   }
 
-  const body = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = couponCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+
   const {
     code,
     discountType,
@@ -59,43 +65,7 @@ export async function POST(req: NextRequest) {
     minAmountCents,
     maxRedemptions,
     expiresAt,
-  } = body;
-
-  // Validate required fields
-  if (!discountType || discountValue === undefined || discountValue === null) {
-    return NextResponse.json(
-      { error: "Discount type and value are required" },
-      { status: 400 }
-    );
-  }
-
-  if (typeof discountValue !== "number" || !Number.isInteger(discountValue) || discountValue <= 0) {
-    return NextResponse.json(
-      { error: "Discount value must be a positive integer" },
-      { status: 400 }
-    );
-  }
-
-  if (!["percentage", "fixed"].includes(discountType)) {
-    return NextResponse.json(
-      { error: "Discount type must be 'percentage' or 'fixed'" },
-      { status: 400 }
-    );
-  }
-
-  if (discountType === "percentage" && (discountValue < 1 || discountValue > 100)) {
-    return NextResponse.json(
-      { error: "Percentage must be between 1 and 100" },
-      { status: 400 }
-    );
-  }
-
-  if (discountType === "fixed" && discountValue < 1) {
-    return NextResponse.json(
-      { error: "Fixed discount must be at least 1 cent" },
-      { status: 400 }
-    );
-  }
+  } = result.data;
 
   // Validate product belongs to creator (if provided)
   if (productId) {

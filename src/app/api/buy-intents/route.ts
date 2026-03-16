@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { buyIntents, products } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { rateLimit } from "@/lib/rate-limit";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { buyIntentCreateSchema } from "@/lib/validations/buy-intents";
 
 export async function POST(req: NextRequest) {
   const rateLimitResult = await rateLimit(req, {
@@ -13,11 +15,11 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResult) return rateLimitResult;
 
-  const { productId } = await req.json();
-
-  if (!productId) {
-    return NextResponse.json({ error: "productId required" }, { status: 400 });
-  }
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = buyIntentCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+  const { productId } = result.data;
 
   const product = await db
     .select({ id: products.id, creatorId: products.creatorId })

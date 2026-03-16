@@ -572,7 +572,7 @@ async function cmdListOverrides() {
     .from(creators)
     .where(isNotNull(creators.commissionOverridePercent));
 
-  const active = results.filter(isActive);
+  const active = results.filter((c) => isOverrideActive(c.commissionOverridePercent, c.commissionOverrideExpiresAt));
 
   if (active.length === 0) {
     console.log("No active commission overrides.");

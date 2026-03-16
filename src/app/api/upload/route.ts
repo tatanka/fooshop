@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { getUploadUrl } from "@/lib/r2";
 import { randomUUID } from "crypto";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { uploadCreateSchema } from "@/lib/validations/upload";
 
 const MAX_FILE_SIZE_MB = 100;
 const MAX_COVER_SIZE_MB = 5;
@@ -22,15 +24,11 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResult) return rateLimitResult;
 
-  const { filename, contentType, purpose } = await req.json();
-
-  if (!filename || !contentType) {
-    return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
-  }
-
-  if (purpose && !["file", "cover"].includes(purpose)) {
-    return NextResponse.json({ error: "Invalid purpose" }, { status: 400 });
-  }
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = uploadCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+  const { filename, contentType, purpose } = result.data;
 
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const maxMB = purpose === "cover" ? MAX_COVER_SIZE_MB : MAX_FILE_SIZE_MB;

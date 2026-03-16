@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, calculatePlatformFee } from "@/lib/stripe";
 import { applyDiscount } from "@/lib/coupon";
@@ -176,10 +177,18 @@ export async function POST(req: NextRequest) {
         .update(coupons)
         .set({ redemptionCount: sql`${coupons.redemptionCount} - 1` })
         .where(eq(coupons.id, couponId))
-        .catch((rollbackErr) =>
-          console.error("Failed to rollback coupon redemption:", rollbackErr)
-        );
+        .catch((rollbackErr) => {
+          console.error("Failed to rollback coupon redemption:", rollbackErr);
+          Sentry.captureException(rollbackErr, {
+            tags: { flow: "checkout", step: "coupon-rollback" },
+            extra: { couponId },
+          });
+        });
     }
+    Sentry.captureException(err, {
+      tags: { flow: "checkout" },
+      extra: { productId, creatorId: creator.id, couponId },
+    });
     console.error("Checkout session creation failed:", err);
     const message = err instanceof Error ? err.message : "Payment service error";
     return NextResponse.json({ error: message }, { status: 500 });

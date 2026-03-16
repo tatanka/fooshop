@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { coupons, creators, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { generateCouponCode } from "@/lib/coupon";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { adminCouponCreateSchema } from "@/lib/validations/admin";
 
 const READ_SCOPE = "admin:read:orders";
 const WRITE_SCOPE = "admin:write:coupons";
@@ -33,15 +35,12 @@ export async function POST(req: NextRequest) {
   }
   if (!hasScope(auth, WRITE_SCOPE)) return insufficientScope(WRITE_SCOPE);
 
-  const body = await req.json();
-  const { creatorId, code, discountType, discountValue, productId, maxRedemptions, expiresAt } = body;
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = adminCouponCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
-  if (!creatorId || !discountType || discountValue === undefined) {
-    return NextResponse.json(
-      { error: "creatorId, discountType, and discountValue are required" },
-      { status: 400 }
-    );
-  }
+  const { creatorId, code, discountType, discountValue, productId, minAmountCents, maxRedemptions, expiresAt } = result.data;
 
   // Verify creator exists
   const [creator] = await db
@@ -76,6 +75,7 @@ export async function POST(req: NextRequest) {
         discountType,
         discountValue,
         productId: productId || null,
+        minAmountCents: minAmountCents ?? null,
         maxRedemptions: maxRedemptions || null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       })

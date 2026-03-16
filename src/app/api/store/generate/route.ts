@@ -5,6 +5,8 @@ import { generateStore } from "@/lib/ai";
 import { db } from "@/db";
 import { creators } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { storeGenerateSchema } from "@/lib/validations/store";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -21,7 +23,12 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResult) return rateLimitResult;
 
-  const { description } = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = storeGenerateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+
+  const { description } = result.data;
   const generated = await generateStore(description);
 
   const slug = generated.storeName

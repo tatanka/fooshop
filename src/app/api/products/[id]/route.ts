@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { products, creators } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { deleteObject } from "@/lib/r2";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { productUpdateSchema } from "@/lib/validations/products";
 
 export async function GET(
   req: NextRequest,
@@ -57,7 +59,10 @@ export async function PUT(
     return NextResponse.json({ error: "Creator not found" }, { status: 404 });
   }
 
-  const body = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = productUpdateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
   // Fetch current product to check for file replacement
   const [current] = await db
@@ -71,17 +76,17 @@ export async function PUT(
 
   // Clean up old R2 files if being replaced (parallel, fire-and-forget)
   const cleanups: Promise<void>[] = [];
-  if (body.fileUrl && current.fileUrl && body.fileUrl !== current.fileUrl) {
+  if (result.data.fileUrl && current.fileUrl && result.data.fileUrl !== current.fileUrl) {
     cleanups.push(deleteObject(current.fileUrl).catch(() => {}));
   }
-  if (body.coverImageUrl && current.coverImageUrl && body.coverImageUrl !== current.coverImageUrl) {
+  if (result.data.coverImageUrl && current.coverImageUrl && result.data.coverImageUrl !== current.coverImageUrl) {
     cleanups.push(deleteObject(current.coverImageUrl).catch(() => {}));
   }
   if (cleanups.length > 0) {
     await Promise.all(cleanups);
   }
 
-  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = body;
+  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = result.data;
   const [updated] = await db
     .update(products)
     .set({ title, description, priceCents, category, status, fileUrl, coverImageUrl })

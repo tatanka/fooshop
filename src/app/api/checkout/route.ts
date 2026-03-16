@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { products, creators, coupons, referrals } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { rateLimit } from "@/lib/rate-limit";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { checkoutCreateSchema } from "@/lib/validations/checkout";
 
 export async function POST(req: NextRequest) {
   const rateLimitResult = await rateLimit(req, {
@@ -15,7 +17,11 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResult) return rateLimitResult;
 
-  const { productId, couponCode, referralCode, source } = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = checkoutCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
+  const { productId, couponCode, referralCode, source } = result.data;
 
   const product = await db
     .select()

@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { creators, referrals, referralConversions, products } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { generateReferralCode } from "@/lib/referral";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { referralCreateSchema } from "@/lib/validations/referrals";
 
 export async function GET() {
   const session = await auth();
@@ -54,30 +56,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Creator not found" }, { status: 404 });
   }
 
-  const body = await req.json();
-  const { code, affiliateName, affiliateEmail, productId, commissionPercent } = body;
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = referralCreateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
-  // Validate required fields
-  if (!affiliateName || typeof affiliateName !== "string" || !affiliateName.trim()) {
-    return NextResponse.json(
-      { error: "Affiliate name is required" },
-      { status: 400 }
-    );
-  }
-
-  if (
-    commissionPercent === undefined ||
-    commissionPercent === null ||
-    typeof commissionPercent !== "number" ||
-    !Number.isInteger(commissionPercent) ||
-    commissionPercent < 1 ||
-    commissionPercent > 100
-  ) {
-    return NextResponse.json(
-      { error: "Commission must be an integer between 1 and 100" },
-      { status: 400 }
-    );
-  }
+  const { code, affiliateName, affiliateEmail, productId, commissionPercent } = result.data;
 
   // Validate product belongs to creator (if provided)
   if (productId) {

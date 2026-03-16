@@ -4,6 +4,8 @@ import { coupons, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { applyDiscount } from "@/lib/coupon";
 import { rateLimit } from "@/lib/rate-limit";
+import { parseBody, validationError } from "@/lib/validations/helpers";
+import { couponValidateSchema } from "@/lib/validations/coupons";
 
 export async function POST(req: NextRequest) {
   const rateLimitResult = await rateLimit(req, {
@@ -14,14 +16,12 @@ export async function POST(req: NextRequest) {
   });
   if (rateLimitResult) return rateLimitResult;
 
-  const { code, productId } = await req.json();
+  const { data: body, error: parseError } = await parseBody(req);
+  if (parseError) return parseError;
+  const result = couponValidateSchema.safeParse(body);
+  if (!result.success) return validationError(result.error);
 
-  if (!code || !productId) {
-    return NextResponse.json(
-      { valid: false, error: "Code and product ID required" },
-      { status: 400 }
-    );
-  }
+  const { code, productId } = result.data;
 
   // Fetch the product to get the creator ID and price
   const product = await db

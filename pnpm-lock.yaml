@@ -56,6 +56,9 @@ importers:
       stripe:
         specifier: ^20.4.1
         version: 20.4.1(@types/node@20.19.37)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4

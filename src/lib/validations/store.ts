@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { hexColorSchema } from "./common";
+import { hexColorSchema, storeNameSchema, storeDescriptionSchema } from "./common";
 
 export const storeUpdateSchema = z.object({
-  storeName: z.string().min(1).max(100).optional(),
-  storeDescription: z.string().max(2000).optional(),
+  storeName: storeNameSchema.optional(),
+  storeDescription: storeDescriptionSchema.optional(),
 });
 
 export const themeSchema = z.object({

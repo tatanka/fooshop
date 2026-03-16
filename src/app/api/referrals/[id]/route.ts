@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: Props) {
 
   const allowedFields: Record<string, unknown> = {};
   if (result.data.affiliateName !== undefined) allowedFields.affiliateName = result.data.affiliateName;
-  if (result.data.affiliateEmail !== undefined) allowedFields.affiliateEmail = result.data.affiliateEmail;
+  if (result.data.affiliateEmail !== undefined) allowedFields.affiliateEmail = result.data.affiliateEmail?.trim() || null;
   if (result.data.commissionPercent !== undefined) allowedFields.commissionPercent = result.data.commissionPercent;
   if (result.data.active !== undefined) allowedFields.active = result.data.active;
   if (result.data.productId !== undefined) {

@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { priceCentsSchema } from "./common";
+import { CATEGORIES } from "@/lib/categories";
 
 export const productCreateSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(5000).optional(),
   priceCents: priceCentsSchema,
-  category: z.string().min(1).optional(),
+  category: z.enum(CATEGORIES).optional(),
   status: z.enum(["draft", "published"]).optional(),
   fileUrl: z.string().url().optional(),
   coverImageUrl: z.string().url().optional(),

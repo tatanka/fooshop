@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getStripe } from "@/lib/stripe";
@@ -10,6 +11,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  Sentry.setUser({ id: session.user.id });
 
   const creator = await db
     .select()
@@ -50,6 +53,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: accountLink.url });
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { flow: "stripe-connect" },
+      extra: { creatorId: creator.id },
+    });
     console.error("Stripe Connect error:", err);
     const message = err instanceof Error ? err.message : "Stripe error";
     return NextResponse.json({ error: message }, { status: 500 });

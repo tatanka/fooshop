@@ -13,6 +13,7 @@ Add Zod schema validation to all POST/PUT/PATCH API routes, replacing scattered 
 - **Schemas as types:** Use `z.infer<typeof schema>` to derive TypeScript types from schemas — eliminates type drift.
 - **Centralized schemas:** All schemas live in `src/lib/validations/` with one file per domain.
 - **Direct safeParse:** Each route calls `schema.safeParse(body)` explicitly (no middleware wrapper).
+- **Stricter date format:** `expiresAt` fields require ISO 8601 datetime strings (`z.string().datetime()`). This is a deliberate tightening from the current permissive `new Date(string)` parsing.
 
 ## Error Response Format
 
@@ -35,11 +36,11 @@ Compatible with existing `{ error: "..." }` pattern used by all routes.
 ```
 src/lib/validations/
   helpers.ts          # validationError() helper
-  common.ts           # shared: uuidSchema, priceCentsSchema, slugSchema
+  common.ts           # shared: uuidSchema, priceCentsSchema, hexColorSchema
   products.ts         # productCreateSchema, productUpdateSchema
   coupons.ts          # couponCreateSchema, couponUpdateSchema, couponValidateSchema
   referrals.ts        # referralCreateSchema, referralUpdateSchema
-  store.ts            # storeUpdateSchema, themeUpdateSchema, themeGenerateSchema, storeGenerateSchema
+  store.ts            # storeUpdateSchema, themeSchema, themeUpdateSchema, themeGenerateSchema, storeGenerateSchema
   checkout.ts         # checkoutCreateSchema
   upload.ts           # uploadCreateSchema
   buy-intents.ts      # buyIntentCreateSchema
@@ -73,12 +74,14 @@ Shared building blocks composed into domain schemas:
 ```typescript
 export const uuidSchema = z.string().uuid();
 export const priceCentsSchema = z.number().int().min(0);
-export const slugSchema = z.string().regex(/^[a-z0-9-]+$/);
+export const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 ```
 
-## Key Schemas
+## All Schemas
 
-### Products
+### Products (`products.ts`)
+
+Fields match actual route at `src/app/api/products/route.ts` (lines 115-122) and `src/app/api/products/[id]/route.ts` (line 84).
 
 ```typescript
 export const productCreateSchema = z.object({
@@ -87,74 +90,192 @@ export const productCreateSchema = z.object({
   priceCents: priceCentsSchema,
   category: z.string().min(1).optional(),
   status: z.enum(["draft", "published"]).optional(),
-  fileKey: z.string().optional(),
-  fileName: z.string().optional(),
-  fileSize: z.number().int().positive().optional(),
-  thumbnailUrl: z.string().url().optional(),
-  metadata_json: z.record(z.unknown()).optional(),
+  fileUrl: z.string().url().optional(),
+  coverImageUrl: z.string().url().optional(),
 });
 
 export const productUpdateSchema = productCreateSchema.partial();
 ```
 
-### Coupons
+### Coupons (`coupons.ts`)
 
-Replaces duplicated manual validation in both regular and admin routes:
+Replaces duplicated manual validation in both regular and admin routes. Fields match `src/app/api/coupons/route.ts` (lines 54-62).
 
 ```typescript
-export const couponCreateSchema = z.object({
-  code: z.string().min(1).max(50),
+const baseCouponSchema = z.object({
+  code: z.string().min(1).max(50).optional(),
   discountType: z.enum(["percentage", "fixed"]),
   discountValue: z.number().int().positive(),
-  maxUses: z.number().int().positive().optional(),
-  expiresAt: z.string().datetime().optional(),
   productId: uuidSchema.optional(),
-}).refine(
+  minAmountCents: z.number().int().min(0).optional(),
+  maxRedemptions: z.number().int().positive().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+export const couponCreateSchema = baseCouponSchema.refine(
   (d) => !(d.discountType === "percentage" && (d.discountValue < 1 || d.discountValue > 100)),
   { message: "Percentage discount must be between 1 and 100", path: ["discountValue"] }
 );
+
+// PUT /api/coupons/[id] — only allows specific fields
+export const couponUpdateSchema = z.object({
+  active: z.boolean().optional(),
+  maxRedemptions: z.number().int().positive().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  minAmountCents: z.number().int().min(0).nullable().optional(),
+}).refine(
+  (obj) => Object.values(obj).some((v) => v !== undefined),
+  { message: "At least one field is required" }
+);
+
+// POST /api/coupons/validate
+export const couponValidateSchema = z.object({
+  code: z.string().min(1),
+  productId: uuidSchema,
+});
 ```
 
-### Checkout
+### Referrals (`referrals.ts`)
+
+Fields match `src/app/api/referrals/route.ts` (line 58).
+
+```typescript
+export const referralCreateSchema = z.object({
+  code: z.string().min(1).max(50).optional(),
+  affiliateName: z.string().min(1).max(200),
+  affiliateEmail: z.string().email().optional(),
+  productId: uuidSchema.optional(),
+  commissionPercent: z.number().int().min(1).max(100),
+});
+
+// PUT /api/referrals/[id] — only allows specific fields
+export const referralUpdateSchema = z.object({
+  affiliateName: z.string().min(1).max(200).optional(),
+  affiliateEmail: z.string().email().nullable().optional(),
+  commissionPercent: z.number().int().min(1).max(100).optional(),
+  active: z.boolean().optional(),
+  productId: uuidSchema.nullable().optional(),
+}).refine(
+  (obj) => Object.values(obj).some((v) => v !== undefined),
+  { message: "At least one field is required" }
+);
+```
+
+### Store (`store.ts`)
+
+Fields match `src/app/api/store/route.ts` (lines 35-36) — no `slug` field.
+
+```typescript
+export const storeUpdateSchema = z.object({
+  storeName: z.string().min(1).max(100).optional(),
+  storeDescription: z.string().max(2000).optional(),
+});
+
+// Theme schema replaces validateTheme() in src/lib/theme.ts
+export const themeSchema = z.object({
+  primaryColor: hexColorSchema,
+  secondaryColor: hexColorSchema,
+  backgroundColor: hexColorSchema,
+  textColor: hexColorSchema,
+  accentColor: hexColorSchema,
+  fontFamily: z.enum(["sans", "serif", "mono"]),
+  heroStyle: z.enum(["gradient", "solid", "minimal"]),
+  layout: z.enum(["grid", "featured", "list"]),
+});
+
+// PUT /api/store/theme — wraps theme in object
+export const themeUpdateSchema = z.object({
+  theme: themeSchema,
+});
+
+// POST /api/store/theme/generate
+export const themeGenerateSchema = z.object({
+  prompt: z.string().min(1).max(1000),
+});
+
+// POST /api/store/generate
+export const storeGenerateSchema = z.object({
+  description: z.string().min(1).max(2000),
+});
+```
+
+### Checkout (`checkout.ts`)
+
+Fields match `src/app/api/checkout/route.ts` (line 18).
 
 ```typescript
 export const checkoutCreateSchema = z.object({
   productId: uuidSchema,
   couponCode: z.string().optional(),
   referralCode: z.string().optional(),
+  source: z.enum(["web", "mcp", "api"]).optional(),
 });
 ```
 
-### Store
+### Upload (`upload.ts`)
 
-```typescript
-export const storeUpdateSchema = z.object({
-  storeName: z.string().min(1).max(100).optional(),
-  storeDescription: z.string().max(2000).optional(),
-  slug: slugSchema.optional(),
-});
-```
-
-### Upload
+Fields match `src/app/api/upload/route.ts` (line 25) — note lowercase `filename`.
 
 ```typescript
 export const uploadCreateSchema = z.object({
-  fileName: z.string().min(1),
+  filename: z.string().min(1),
   contentType: z.string().min(1),
-  fileSize: z.number().int().positive().max(500 * 1024 * 1024),
+  purpose: z.enum(["file", "cover"]).optional(),
 });
 ```
 
-### Remaining schemas
+### Buy Intents (`buy-intents.ts`)
 
-Referrals, buy-intents, admin, theme, and store/generate schemas follow the same patterns. Exact fields will be determined by reading each route during implementation.
+Fields match `src/app/api/buy-intents/route.ts` (line 16).
+
+```typescript
+export const buyIntentCreateSchema = z.object({
+  productId: uuidSchema,
+});
+```
+
+### Admin (`admin.ts`)
+
+```typescript
+// POST /api/admin/coupons — like couponCreateSchema but requires creatorId
+export const adminCouponCreateSchema = z.object({
+  creatorId: uuidSchema,
+  code: z.string().min(1).max(50).optional(),
+  discountType: z.enum(["percentage", "fixed"]),
+  discountValue: z.number().int().positive(),
+  productId: uuidSchema.optional(),
+  maxRedemptions: z.number().int().positive().optional(),
+  expiresAt: z.string().datetime().optional(),
+}).refine(
+  (d) => !(d.discountType === "percentage" && (d.discountValue < 1 || d.discountValue > 100)),
+  { message: "Percentage discount must be between 1 and 100", path: ["discountValue"] }
+);
+
+// PATCH /api/admin/creators/[id]
+export const adminCreatorUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  storeName: z.string().min(1).max(100).optional(),
+  storeDescription: z.string().max(2000).optional(),
+  commissionOverridePercent: z.number().int().min(0).max(100).nullable().optional(),
+  commissionOverrideExpiresAt: z.string().datetime().nullable().optional(),
+}).refine(
+  (obj) => Object.values(obj).some((v) => v !== undefined),
+  { message: "At least one field is required" }
+);
+```
 
 ## Route Integration Pattern
 
-Each route follows 3 lines after `await req.json()`:
+Each route adds JSON parsing safety and Zod validation after `await req.json()`:
 
 ```typescript
-const body = await req.json();
+let body: unknown;
+try {
+  body = await req.json();
+} catch {
+  return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+}
 const result = productCreateSchema.safeParse(body);
 if (!result.success) return validationError(result.error);
 const { title, priceCents } = result.data; // fully typed
@@ -163,6 +284,7 @@ const { title, priceCents } = result.data; // fully typed
 ### What changes per route
 
 - Import the schema + `validationError`
+- Wrap `req.json()` in try-catch for malformed JSON
 - Add safeParse + early return
 - Destructure from `result.data` instead of raw `body`
 - Remove manual validation checks now handled by Zod
@@ -175,7 +297,7 @@ const { title, priceCents } = result.data; // fully typed
 
 ### validateTheme() replacement
 
-The manual `validateTheme()` in `src/lib/theme.ts` is replaced by a Zod schema in `validations/store.ts`. The theme route uses the Zod schema instead.
+The manual `validateTheme()` in `src/lib/theme.ts` is replaced by `themeSchema` in `validations/store.ts`. Routes that used `validateTheme()` (`/api/store/theme` and `/api/store/theme/generate`) will use the Zod schema instead. The `validateTheme()` function can be removed after migration.
 
 ## Routes to Update
 
@@ -205,7 +327,7 @@ The manual `validateTheme()` in `src/lib/theme.ts` is replaced by a Zod schema i
 
 ## Out of Scope
 
-- GET endpoint query parameter validation
+- GET endpoint query parameter validation (including `/api/referrals/track` which takes a `code` query param)
 - Response schema validation
 - OpenAPI/Swagger generation from schemas
 - Client-side form validation sharing schemas

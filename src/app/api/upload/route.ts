@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { getUploadUrl } from "@/lib/r2";
 import { randomUUID } from "crypto";
 
@@ -11,6 +12,15 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rateLimitResult = await rateLimit(req, {
+    endpoint: "upload",
+    limit: 5,
+    windowMs: 60_000,
+    keyStrategy: "both",
+    userId: session.user.id,
+  });
+  if (rateLimitResult) return rateLimitResult;
 
   const { filename, contentType, purpose } = await req.json();
 

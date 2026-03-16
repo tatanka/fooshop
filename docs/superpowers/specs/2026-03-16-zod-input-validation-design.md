@@ -244,6 +244,7 @@ export const adminCouponCreateSchema = z.object({
   discountType: z.enum(["percentage", "fixed"]),
   discountValue: z.number().int().positive(),
   productId: uuidSchema.optional(),
+  minAmountCents: z.number().int().min(0).optional(), // NOTE: also add to admin route handler (currently missing)
   maxRedemptions: z.number().int().positive().optional(),
   expiresAt: z.string().datetime().optional(),
 }).refine(

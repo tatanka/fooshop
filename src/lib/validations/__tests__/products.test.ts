@@ -15,7 +15,7 @@ describe("productCreateSchema", () => {
       title: "My Product",
       description: "A description",
       priceCents: 999,
-      category: "ebook",
+      category: "templates",
       status: "published",
       fileUrl: "https://example.com/file.pdf",
       coverImageUrl: "https://example.com/cover.jpg",
@@ -68,6 +68,15 @@ describe("productCreateSchema", () => {
       title: "My Product",
       priceCents: 999,
       fileUrl: "not-a-url",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid category", () => {
+    const result = productCreateSchema.safeParse({
+      title: "My Product",
+      priceCents: 999,
+      category: "invalid-category",
     });
     expect(result.success).toBe(false);
   });

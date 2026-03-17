@@ -28,7 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
+      <body
+        className={`${playfair.variable} ${dmSans.variable} antialiased`}
+      >
+        {children}
         <Script
           defer
           data-domain="fooshop.exelab.net"
@@ -42,11 +45,6 @@ export default function RootLayout({
             __html: `window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};plausible.init=plausible.init||function(){(plausible.o=[])}; plausible.init()`,
           }}
         />
-      </head>
-      <body
-        className={`${playfair.variable} ${dmSans.variable} antialiased`}
-      >
-        {children}
       </body>
     </html>
   );

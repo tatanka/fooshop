@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -27,6 +28,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          defer
+          data-domain="fooshop.exelab.net"
+          src="https://plausible.io/js/pa-erOyM4okq0LymrFvoE4.js"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="plausible-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};plausible.init=plausible.init||function(){(plausible.o=[])}; plausible.init()`,
+          }}
+        />
+      </head>
       <body
         className={`${playfair.variable} ${dmSans.variable} antialiased`}
       >

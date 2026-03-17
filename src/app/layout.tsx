@@ -29,13 +29,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script
-          defer
-          data-domain="fooshop.exelab.net"
-          src="https://plausible.io/js/pa-erOyM4okq0LymrFvoE4.js"
+          async
+          src="https://plausible.io/js/pa-exOyW4dkq0LynnfVvoE64.js"
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};plausible.init=plausible.init||function(){(plausible.o=[])}; plausible.init()`,
+            __html: `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}}; plausible.init()`,
           }}
         />
       </head>

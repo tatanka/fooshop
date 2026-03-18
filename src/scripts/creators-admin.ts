@@ -180,7 +180,7 @@ async function cmdRemoveCommission(config: Config, query: string) {
     commissionOverrideExpiresAt: null,
   });
 
-  console.log(`Removed commission override for ${c.name} (${c.email}). Back to default 5%.`);
+  console.log(`Removed commission override for ${c.name} (${c.email}). Back to default 8%.`);
 }
 
 async function cmdListOverrides(config: Config) {

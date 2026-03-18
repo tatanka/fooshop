@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Fooshop — AI-powered marketplace for digital products",
   description:
-    "Sell digital products with zero fixed costs. AI generates your storefront. 5% commission only when you sell.",
+    "Sell digital products with zero fixed costs. AI generates your storefront. 8% commission only when you sell.",
 };
 
 export default function Home() {
@@ -17,7 +17,7 @@ export default function Home() {
           with zero upfront costs.
         </h1>
         <p className="mt-6 text-lg md:text-xl text-muted max-w-xl">
-          AI-powered storefronts. 5% only when you sell.
+          AI-powered storefronts. 8% only when you sell.
         </p>
         <div className="mt-10 flex gap-4">
           <a
@@ -52,7 +52,7 @@ export default function Home() {
             {
               num: "03.",
               title: "Get paid instantly",
-              desc: "5% commission. That's it. No subscription, no hidden fees.",
+              desc: "8% commission. That's it. No subscription, no hidden fees.",
             },
           ].map((step, i) => (
             <div key={step.num} className={`animate-fade-up stagger-${i + 1}`}>

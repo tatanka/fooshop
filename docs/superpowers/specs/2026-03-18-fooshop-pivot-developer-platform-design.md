@@ -18,6 +18,8 @@ Nel 2026 il developer vive nel terminale con un AI assistant. Qualsiasi tool che
 
 **La soluzione:** Commerce che vive dove lavori — terminale, AI assistant, API. Non un'interfaccia web con un'API attaccata. Un'infrastruttura commerce nativa per l'era degli AI coding tools.
 
+**L'esperienza killer:** Il developer dice a Claude Code "crea uno store su Fooshop e vendici il mio template a $49". Claude Code legge la documentazione da Context7, esegue i comandi CLI, e lo store è live. Nessun onboarding, nessuna UI, nessun comando da imparare. Commerce conversazionale con il tuo AI assistant.
+
 **Tagline:** "Add commerce to anything. One command. One API."
 
 **Target segments:**
@@ -33,6 +35,7 @@ Nel 2026 il developer vive nel terminale con un AI assistant. Qualsiasi tool che
 **Differenziatori:**
 - **CLI-first:** commerce dal terminale. Nessun competitor ce l'ha
 - **MCP-native:** gestisci il tuo shop parlando con Claude/Cursor/Gemini. Il primo ecommerce operabile da AI assistant
+- **Context7/Context Hub ready:** la documentazione CLI è leggibile da AI coding tools. Zero onboarding — l'AI sa già come usare Fooshop
 - **API pubblica dal giorno 1:** non un'evoluzione futura, il core del prodotto
 - **AI genera store, copy, metadati:** zero configurazione
 - **Digitale + fisico:** un'unica piattaforma
@@ -198,8 +201,9 @@ Le seguenti feature sopravvivono al pivot:
 
 1. **`fooshop` su npm** — il developer installa e prova in 30 secondi
 2. **`@fooshop/mcp` su npm** — il primo ecommerce acquistabile da agenti AI
-3. **Video demo (30-60 sec):** terminale, `fooshop init`, store live. Poi un agente AI che trova il prodotto e genera un checkout link
-4. **Post su Hacker News:** "Show HN: Fooshop — deploy an e-commerce store from your terminal"
+3. **Docs su Context7** — Claude Code/Cursor leggono automaticamente la documentazione. Zero onboarding
+4. **Video demo (30-60 sec):** un developer dice a Claude Code "crea uno store su Fooshop e vendici il mio template a $49". Store live in 30 secondi. Nessun comando digitato manualmente
+5. **Post su Hacker News:** "Show HN: Fooshop — manage an e-commerce store from your AI assistant"
 
 ### Canali
 
@@ -213,9 +217,11 @@ Le seguenti feature sopravvivono al pivot:
 - CLI funzionante (`init`, `login`, `products add`, `orders list`)
 - MCP server con read + write + purchase
 - API documentation pubblica (le API esistono già, servono docs)
+- Docs pubblicate su Context7 (Claude Code/Cursor leggono automaticamente)
 - 3-5 store demo con prodotti reali
-- Landing page riscritta con posizionamento developer ("Add commerce to anything")
+- Landing page riscritta con posizionamento "Commerce that lives where you work"
 - Commissione 8% (tier Free, unico tier al lancio)
+- Video demo: Claude Code crea e gestisce uno store via CLI
 
 ### Cosa NON serve prima del lancio
 
@@ -295,3 +301,11 @@ Futuro: token di pagamento pre-autorizzati per acquisti autonomi da parte degli 
 ### CLI scriptabile
 
 Flag `--json` su tutti i comandi, pipe support, integrazione CI/CD. Arriva naturalmente dopo la CLI base.
+
+### Everything Store per agenti AI (stella polare)
+
+Ogni store su Fooshop alimenta automaticamente il catalogo MCP. Man mano che gli store crescono (10K+), Fooshop diventa il catalogo commerce più grande accessibile da agenti AI. Il flywheel: più store → catalogo MCP più ricco → più agenti lo usano → più buyer → più store vogliono essere su Fooshop.
+
+Revenue aggiuntive a scala: discovery fee (agente trova prodotto → fee sulla transazione), priority placement (promoted results nel catalogo MCP), API usage per aziende che costruiscono agenti.
+
+Fooshop diventa dove gli agenti AI vanno a fare shopping.

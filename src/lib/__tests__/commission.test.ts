@@ -26,15 +26,15 @@ describe("isOverrideActive", () => {
 });
 
 describe("getEffectiveCommissionPercent", () => {
-  it("returns default 5 when no creator provided", () => {
-    expect(getEffectiveCommissionPercent()).toBe(5);
+  it("returns default 8 when no creator provided", () => {
+    expect(getEffectiveCommissionPercent()).toBe(8);
   });
 
-  it("returns default 5 when override is null", () => {
+  it("returns default 8 when override is null", () => {
     expect(getEffectiveCommissionPercent({
       commissionOverridePercent: null,
       commissionOverrideExpiresAt: null,
-    })).toBe(5);
+    })).toBe(8);
   });
 
   it("returns 0 when active 0% override", () => {
@@ -44,12 +44,12 @@ describe("getEffectiveCommissionPercent", () => {
     })).toBe(0);
   });
 
-  it("returns default 5 when override is expired", () => {
+  it("returns default 8 when override is expired", () => {
     const past = new Date(Date.now() - 86400000);
     expect(getEffectiveCommissionPercent({
       commissionOverridePercent: 0,
       commissionOverrideExpiresAt: past,
-    })).toBe(5);
+    })).toBe(8);
   });
 
   it("returns custom percent when active", () => {

@@ -8,9 +8,11 @@
 
 ## Executive Summary
 
-**Fooshop — Add commerce to anything. One command. One API.**
+**Fooshop — Commerce that lives where you work.**
 
-Piattaforma ecommerce developer-first. CLI, API documentata, e MCP server dal giorno 1. Target: chiunque costruisce ecommerce — per sé, per clienti, o embedded nel proprio prodotto.
+Nel 2026 il developer vive nel terminale con un AI assistant. Ogni strumento commerce lo costringe ad aprire un browser. Fooshop no: CLI, MCP server, API — commerce dal terminale e dall'AI assistant.
+
+Target: chiunque costruisce ecommerce — per sé, per clienti, o embedded nel proprio prodotto. CLI, API documentata, e MCP server dal giorno 1.
 
 Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business) + API usage. Bootstrap da Exelab fino a PMF, poi Series A.
 
@@ -45,10 +47,11 @@ Il segmento platform (M12+): developer e agency che costruiscono ecommerce per c
 
 ### Perché il timing è giusto
 
+- **Il developer vive nel terminale + AI assistant.** Claude Code, Cursor, Gemini sono il nuovo IDE. Qualsiasi tool che richiede un browser è frizione. Questo trend accelera, non rallenta
+- **Nessun ecommerce è CLI-first o MCP-native.** Shopify è per merchant. Gumroad è per creator. Zero strumenti commerce vivono dove il developer lavora
 - **Vibe coding era:** il costo di costruire un frontend custom è crollato. Serve un backend commerce altrettanto semplice
-- **AI agents:** nessuna piattaforma ecommerce ha un MCP server. Fooshop è il primo catalogo acquistabile da agenti AI
-- **Developer fatigue:** Shopify è per merchant, non developer. Gumroad è per creator, non developer. Non esiste un ecommerce CLI-first
 - **73% delle aziende** usa già architettura headless (Swell, 2025). Il mercato è educato
+- **Nessun incumbent può copiarlo:** Shopify dipende dalla UI merchant, Gumroad è in maintenance mode, Stripe è payment non storefront
 
 ---
 

@@ -8,41 +8,47 @@
 
 ## Posizionamento e Target
 
-**Fooshop — Add commerce to anything. One command. One API.**
+**Fooshop — Commerce that lives where you work.**
 
-`fooshop init` → il tuo store è live. CLI-first, AI-native, MCP-enabled.
+Nel 2026 il developer vive nel terminale con un AI assistant. Qualsiasi tool che lo costringe ad aprire un browser e cliccare su una UI è frizione. Shopify, Gumroad, WooCommerce — tutti ti tirano fuori dal tuo workflow. Fooshop no.
 
-**Pitch:** Non è "il Vercel dell'ecommerce" — è "commerce come capability". Chiunque costruisce ecommerce (per sé o per altri) ha un backend commerce pronto in 30 secondi.
+`fooshop init` → store live. Parli con Claude → gestisci lo shop via MCP. Chiami l'API → commerce embedded nel tuo prodotto. Senza mai lasciare il terminale.
+
+**Il pain:** Ogni strumento commerce ti tira fuori dal tuo workflow. Più gli AI assistant diventano il modo di lavorare, più qualsiasi UI web diventa un'interruzione. Questo pain peggiora nel tempo, non migliora.
+
+**La soluzione:** Commerce che vive dove lavori — terminale, AI assistant, API. Non un'interfaccia web con un'API attaccata. Un'infrastruttura commerce nativa per l'era degli AI coding tools.
+
+**Tagline:** "Add commerce to anything. One command. One API."
 
 **Target segments:**
 
 | Segmento | Chi sono | Come usano Fooshop | ARPU |
 |----------|----------|-------------------|------|
-| Indie developer | Vende i propri template, boilerplate, corsi | `fooshop init` → vende | $0-49/mese |
-| Freelancer | Costruisce ecommerce per clienti | Fooshop API per ogni progetto cliente | $49-149/mese |
-| Agency | Team con 10-50+ progetti ecommerce | Stack standard per tutti i progetti | $200-500/mese |
-| Startup | Ha bisogno di commerce nel prodotto | Fooshop API embedded | $200-2000/mese |
+| Indie developer | Vende i propri template, boilerplate, corsi | `fooshop init` → vende. Gestisce via Claude + MCP | $0-49/mese |
+| Freelancer | Costruisce ecommerce per clienti | Fooshop API per ogni progetto. Setup in un'ora, non in una settimana | $49-149/mese |
+| Agency | Team con 10-50+ progetti ecommerce | Stack standard per tutti i progetti. CLI per gestione multi-store | $200-500/mese |
+| Startup | Ha bisogno di commerce nel prodotto | Fooshop API embedded. Non serve costruire un backend commerce | $200-2000/mese |
 | Enterprise/SaaS | Commerce layer nel proprio prodotto | API + custom integration | $2000+/mese |
 
 **Differenziatori:**
-- CLI come interfaccia primaria (nessun competitor ce l'ha)
-- API pubblica documentata dal giorno 1 (non un'evoluzione futura)
-- MCP server per vendere e comprare via agenti AI
-- AI genera store, copy, metadati
-- Fisico + digitale
-- Pricing developer-friendly (free tier generoso, 0% commissione al tier top)
+- **CLI-first:** commerce dal terminale. Nessun competitor ce l'ha
+- **MCP-native:** gestisci il tuo shop parlando con Claude/Cursor/Gemini. Il primo ecommerce operabile da AI assistant
+- **API pubblica dal giorno 1:** non un'evoluzione futura, il core del prodotto
+- **AI genera store, copy, metadati:** zero configurazione
+- **Digitale + fisico:** un'unica piattaforma
+- **Pricing developer-friendly:** free tier generoso, 0% commissione al tier top
 
-**Perché non è Shopify:**
-- Shopify è per merchant che i developer customizzano. Fooshop è infrastruttura per developer che i merchant non vedono
-- Shopify richiede settimane di setup. Fooshop: `fooshop init`
-- Shopify headless (Hydrogen) è complesso. Fooshop API è semplice
-- Shopify non ha CLI per gestire store, né MCP server
+**Perché nessun incumbent può copiarlo:**
+- **Shopify** è costruito per merchant che cliccano su UI. Il loro business model dipende dalla web UI. Non faranno mai CLI-first — ucciderebbe il loro prodotto
+- **Gumroad** è in maintenance mode dal 2024. ~1 dipendente. Non sta costruendo nulla
+- **Stripe** fa payment, non storefront. È complementare, non competitore
+- **Commercetools/Commerce Layer** costano $200K+/anno e richiedono mesi di setup. Fooshop è 30 secondi
 
 **NON è:**
 - Un marketplace (non c'è una homepage "esplora prodotti" come focus primario)
-- Un'alternativa cheap a Gumroad
+- Un'alternativa cheap a Gumroad (stessa fee o più alta, 10x più valore)
 - Un framework self-hostable
-- Un clone di Shopify per developer
+- Una UI web con un'API attaccata — è il contrario
 
 ---
 

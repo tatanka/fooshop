@@ -20,7 +20,7 @@
 - CLI come interfaccia primaria (nessun competitor ce l'ha)
 - MCP server per vendere e comprare via agenti AI
 - AI genera store, copy, metadati
-- Fisico + digitale dal giorno 1
+- Fisico + digitale
 - Pricing developer-friendly (free tier generoso, 0% commissione al tier top)
 
 **NON è:**
@@ -44,37 +44,40 @@ Tutto passa per le stesse API. La CLI non è un wrapper della dashboard — sono
 
 ### CLI (`fooshop` — pacchetto npm globale)
 
-- `fooshop init` → crea store (AI genera tema, copy, metadati)
+- `fooshop init` → sequenza: login (se non autenticato) → crea store (AI genera tema, copy, metadati). Stripe Connect onboarding si fa dopo, al primo `fooshop products add` o dalla dashboard
 - `fooshop products add` → aggiunge prodotto (digitale o fisico)
 - `fooshop products list/edit/delete`
 - `fooshop orders list`
 - `fooshop analytics`
 - `fooshop config` → dominio custom, Stripe, tema
 - `fooshop open` → apre dashboard nel browser
-- Auth via `fooshop login` (browser OAuth flow, salva token locale)
+- Auth via `fooshop login` → apre browser su fooshop.ai/cli-auth, l'utente approva, callback su localhost con token. Token (API key) salvato in `~/.fooshop/config.json`. Usa il sistema API keys già esistente nel DB (`apiKeys` table)
 
 ### Dashboard web (fooshop.ai/dashboard)
 
 - Parità funzionale con CLI
 - Design pulito tipo Render/Railway
-- Al lancio: funzionale ma basic. Migliora nel tempo
+- Al lancio: funzionale ma basic (quella attuale). Migliora nel tempo
 
 ### MCP server (`@fooshop/mcp` — npm)
 
-- **Read:** `search_products`, `get_product`, `get_store`
-- **Write:** `create_store`, `add_product`, `update_product`
-- **Purchase:** `purchase_product` → restituisce checkout URL
-- Parametro opzionale `--store=slug` per scoping su singolo store
+- **Read (no auth):** `search_products`, `get_product`, `get_store` (esistenti)
+- **Write (auth via API key):** `create_store`, `add_product`, `update_product`
+- **Purchase (no auth):** `purchase_product` → restituisce checkout URL (evoluzione del `get_checkout_url` esistente)
+- Parametro opzionale `--store=slug` per scoping su singolo store (read-only, per buyer)
+- Auth per write: l'utente configura l'API key come env var `FOOSHOP_API_KEY` oppure via `--api-key` flag
 
 ```
-npx @fooshop/mcp                    # tutta la piattaforma
-npx @fooshop/mcp --store=mario      # solo lo store di mario
+npx @fooshop/mcp                                    # read-only, tutta la piattaforma
+npx @fooshop/mcp --store=mario                       # read-only, solo store di mario
+FOOSHOP_API_KEY=xxx npx @fooshop/mcp                 # read + write per il proprio store
 ```
 
 ### API REST
 
 - Quelle esistenti (products, checkout, store, upload, orders)
-- Da aggiungere: auth token per CLI, endpoints mancanti per parità CLI/dashboard
+- Il sistema API keys esiste già (`apiKeys` table + `lib/api-key.ts`). Va esteso per supportare il flusso CLI login (generazione key da browser callback)
+- Aggiungere: API key auth middleware sulle route che oggi usano solo session auth
 
 ---
 
@@ -84,17 +87,30 @@ npx @fooshop/mcp --store=mario      # solo lo store di mario
 
 | Tipo | Checkout | Delivery |
 |------|----------|----------|
-| **Digitale** | Pagamento → download automatico | File su R2, link con token temporaneo |
+| **Digitale** | Pagamento → download automatico | File su R2, link con token temporaneo (come oggi) |
 | **Fisico** | Pagamento + indirizzo spedizione | Email al seller con dati ordine + indirizzo. Il seller spedisce da solo |
 
 Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere sia prodotti digitali che fisici.
 
+### Schema changes per prodotti fisici
+
+- `products` table: aggiungere campo `type` (`digital` | `physical`), default `digital`
+- `orders` table: aggiungere campo `shipping_address` (JSONB, nullable) per nome, indirizzo, città, CAP, paese
+- Nessun campo weight/dimensions (non serve senza integrazione corrieri)
+
 ### Checkout flow (fisico)
 
 - Stessa Stripe Checkout session di oggi
-- In più: campi indirizzo di spedizione (Stripe `shipping_address_collection`)
-- Al completamento: webhook crea ordine + manda email al seller con dettagli di spedizione
+- In più: `shipping_address_collection` abilitato su Stripe quando il prodotto è fisico
+- Al completamento: webhook crea ordine con `shipping_address` + manda email al seller con dettagli di spedizione
 - Il buyer riceve email di conferma ordine
+
+### Email
+
+Il codebase attuale non ha un sistema email. Per il lancio:
+- **Servizio:** Resend (developer-friendly, free tier 100 email/giorno, SDK npm)
+- **Template:** email transazionali minimali (ordine ricevuto per seller, conferma acquisto per buyer)
+- Le email servono sia per ordini fisici che digitali (conferma acquisto)
 
 ### Cosa NON c'è (per ora)
 
@@ -115,12 +131,18 @@ Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere s
 
 ### Breakeven per il seller
 
-- Free → Pro conviene a ~$380/mese di vendite (il 5% risparmiato = $19)
-- Pro → Business conviene a ~$1000/mese di vendite (il 3% risparmiato = $30)
+- Free → Pro: il risparmio è 5% (8% - 3%). A $380/mese di vendite, il 5% = $19 → copre il costo Pro
+- Pro → Business: il risparmio è 3% (3% - 0%). Il delta subscription è $30/mese ($49 - $19). A $1000/mese di vendite, il 3% = $30 → copre il delta
+
+### Migrazione utenti esistenti
+
+Gli utenti attuali sono pochi (test/alpha). Vengono migrati al tier Free a 8%. Quelli con commission override attive (early bird a 0%) mantengono l'override fino a scadenza. Dopo scadenza, passano al tier Free standard.
 
 ### Billing
 
-- Subscription via Stripe Billing
+- Subscription via Stripe Billing (nuovo). Richiede: Customer object, subscription lifecycle webhooks (created, updated, canceled, past_due), gestione dunning
+- Campo `tier` (`free` | `pro` | `business`) sulla tabella `creators`, default `free`
+- La commissione è determinata dal tier, non più dal `DEFAULT_COMMISSION_PERCENT`. Il sistema override esistente resta come fallback per promozioni
 - Le commissioni vengono trattenute al momento del checkout (via `application_fee_amount`)
 - Il tier Free non richiede carta di credito
 
@@ -128,6 +150,21 @@ Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere s
 
 - Badge "Powered by Fooshop" su ogni store gratuito
 - Il badge linka a fooshop.ai con referral del seller
+
+---
+
+## Feature esistenti
+
+Le seguenti feature sopravvivono al pivot:
+
+| Feature | Status | Note |
+|---------|--------|------|
+| Coupon system | Resta | Utile per developer, esponibile via CLI (`fooshop coupons`) |
+| Referral/affiliate | Resta | Il badge "Powered by Fooshop" è il referral naturale |
+| Admin panel | Resta | Per gestione interna |
+| Buy intents tracking | Resta | Analytics |
+| Explore page | Resta ma secondaria | Non è il focus, ma utile per SEO e discovery |
+| Commission overrides | Resta | Per promozioni, sovrascrive il tier temporaneamente |
 
 ---
 
@@ -149,27 +186,29 @@ Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere s
 - Reddit: r/SideProject, r/webdev, r/nextjs
 - Product Hunt (secondo lancio, dopo feedback HN)
 
-### Cosa serve prima del lancio
+### Cosa serve prima del lancio (MVP)
 
 - CLI funzionante (`init`, `login`, `products add`, `orders list`)
 - MCP server con read + write + purchase
 - 3-5 store demo con prodotti reali
 - Landing page riscritta con posizionamento developer
+- Commissione 8% (tier Free, unico tier al lancio)
 
 ### Cosa NON serve prima del lancio
 
 - 50 creator reali
-- Dashboard perfetta
-- Prodotti fisici (può arrivare subito dopo)
-- Tier Pro/Business implementati (lanci con Free, aggiungi i tier dopo)
+- Dashboard redesign
+- Prodotti fisici (arriva subito dopo)
+- Tier Pro/Business e Stripe Billing (arriva dopo validazione)
+- Email transazionali (arrivano con il fisico)
 
 ### Sequenza
 
-1. CLI + MCP server + landing page nuova
-2. Video demo
-3. Post HN + X + Reddit
-4. Raccogli feedback, itera
-5. Aggiungi tier, fisico, dashboard bella
+1. CLI + MCP server esteso + landing page nuova → **lancio**
+2. Feedback + iterazione
+3. Prodotti fisici + email (Resend)
+4. Tier Pro/Business + Stripe Billing
+5. Dashboard redesign tipo Render
 
 ---
 
@@ -178,12 +217,13 @@ Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere s
 ### Cosa resta (non si butta nulla)
 
 - Stripe Connect checkout
-- Auth (next-auth)
+- Auth (next-auth) + API keys system esistente
 - Upload su R2 + download con token
 - Schema DB (creators, products, orders, page_views)
 - API routes esistenti
 - AI store generation
-- MCP server (base da estendere)
+- MCP server (base da estendere, include già `get_checkout_url`)
+- Coupon, referral, admin, buy intents
 
 ### Cosa cambia
 
@@ -192,21 +232,28 @@ Il seller sceglie il tipo quando crea il prodotto. Un singolo store può avere s
 | Posizionamento | Marketplace per creator | Piattaforma ecommerce per developer |
 | Interfaccia primaria | Dashboard web | CLI + dashboard |
 | Landing page | "Sell digital products with zero upfront costs" | "Deploy an e-commerce store from your terminal" |
-| Prodotti | Solo digitali | Digitali + fisici (dumb shipping) |
-| MCP server | Read-only | Read + Write + Purchase |
+| Prodotti | Solo digitali | Digitali + fisici (dumb shipping) — post-lancio |
+| MCP server | Read + `get_checkout_url` | Read + Write + Purchase (con auth) |
 | Pricing | 5% flat | Free 8% / Pro $19 3% / Business $49 0% |
 | Target | Template/preset creator | Developer |
 | Explore page | Focus primario | Esiste ma secondario |
 
 ### Cosa va costruito
 
+**Per il lancio (MVP):**
 1. **CLI npm package** (`fooshop`) — nuovo
-2. **API auth token system** — nuovo (per CLI e MCP write)
-3. **MCP server write + purchase tools** — estensione
-4. **Supporto prodotti fisici** — schema + checkout + email
-5. **Pricing tiers + Stripe Billing** — nuovo
-6. **Landing page** — riscrittura
-7. **Dashboard redesign** — iterativo, non bloccante per il lancio
+2. **CLI auth flow** — browser OAuth → localhost callback → API key salvata. Estensione del sistema API keys esistente
+3. **API key auth middleware** — le route API accettano sia session che API key
+4. **MCP server write tools** — `create_store`, `add_product`, `update_product` (con auth via API key)
+5. **MCP `purchase_product`** — evoluzione di `get_checkout_url` esistente
+6. **Landing page** — riscrittura con posizionamento developer
+7. **Commissione 8%** — aggiornamento `DEFAULT_COMMISSION_PERCENT`
+
+**Post-lancio:**
+8. **Prodotti fisici** — campo `type` su products, `shipping_address` su orders, Stripe `shipping_address_collection`
+9. **Email transazionali** — Resend integration per conferme ordine e notifiche seller
+10. **Pricing tiers** — campo `tier` su creators, Stripe Billing integration, subscription webhooks
+11. **Dashboard redesign** — iterativo
 
 ---
 

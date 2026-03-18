@@ -358,9 +358,9 @@ M10 Gen 2027  CLI v2 (più comandi, polish)
 M11 Feb 2027  MCP server v2 (più tool, auth migliorata)
 M12 Mar 2027  REVIEW ANNUALE. $25K MRR target
 M13 Apr 2027  Growth hire. Paid acquisition test
-M14 Mag 2027  API documentation pubblica
+M14 Mag 2027  API docs v2 + SDK client (JS/Python)
 M15 Giu 2027  API as a service (beta). Primi API customer
-M16 Lug 2027  SDK client (JS/Python)
+M16 Lug 2027  API usage pricing (tier-based overage)
 M17 Ago 2027  Dashboard v2 (tipo Render)
 M18 Set 2027  CHECKPOINT. $55K MRR. Series A conversations?
 M19 Ott 2027  Plugin/webhook ecosystem

@@ -24,7 +24,8 @@ Con il modello developer-first, i costi pre-hire sono bassissimi (~$350/mese). F
 | Team (dev hire da M7+, growth hire da M13+) | $30K | $108K |
 | Infrastruttura (Render, R2, Stripe, Resend) | $4K | $18K |
 | Marketing | $3K | $66K |
-| **Totale** | **~$37K** | **~$192K** |
+| Strumenti + Stripe fees | $3K | $9K |
+| **Totale** | **~$40K** | **~$201K** |
 | **Revenue Fooshop** | **~$168K** | **~$692K** |
 | **Net da Exelab** | **$0 (da M5)** | **$0** |
 

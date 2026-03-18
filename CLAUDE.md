@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fooshop is a developer-first ecommerce platform. "Add commerce to anything. One command. One API." Developers use CLI, API, or MCP server to deploy stores, build ecommerce for clients, or embed commerce in their products.
 
-**Positioning:** The Vercel of ecommerce — CLI-first, AI-native, MCP-enabled.
+**Positioning:** Add commerce to anything. One command. One API. CLI-first, AI-native, MCP-enabled.
 
 **Target segments:**
 1. Indie developers selling their own products (templates, boilerplate, courses)

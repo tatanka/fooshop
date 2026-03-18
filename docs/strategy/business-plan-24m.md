@@ -8,9 +8,11 @@
 
 ## Executive Summary
 
-Fooshop è una piattaforma ecommerce per developer. `fooshop init` deploya uno store live in 30 secondi. CLI-first, AI-native, MCP-enabled. Il primo ecommerce dove agenti AI possono cercare e comprare prodotti.
+**Fooshop — Add commerce to anything. One command. One API.**
 
-Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business) + API usage (fase platform). Bootstrap da Exelab fino a PMF, poi Series A.
+Piattaforma ecommerce developer-first. CLI, API documentata, e MCP server dal giorno 1. Target: chiunque costruisce ecommerce — per sé, per clienti, o embedded nel proprio prodotto.
+
+Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business) + API usage. Bootstrap da Exelab fino a PMF, poi Series A.
 
 ---
 
@@ -54,10 +56,10 @@ Il segmento platform (M12+): developer e agency che costruiscono ecommerce per c
 
 | Fase | Periodo | Focus | Revenue model |
 |------|---------|-------|---------------|
-| **1. Build & Launch** | M1-M3 (Apr-Giu 2026) | CLI + MCP server + landing page. Lancio su HN | Commissione 8% |
-| **2. Validate** | M4-M6 (Lug-Set 2026) | Feedback loop, iterate, prodotti fisici, email | Commissione 8% |
+| **1. Build & Launch** | M1-M3 (Apr-Giu 2026) | CLI + MCP server + API docs + landing page. Lancio su HN | Commissione 8% |
+| **2. Validate** | M4-M6 (Lug-Set 2026) | Feedback loop, iterate, prodotti fisici, email. Primi freelancer/agency | Commissione 8% |
 | **3. Monetize** | M7-M12 (Ott 2026 - Mar 2027) | Tier Pro/Business, Stripe Billing, dashboard redesign | Commissione + Subscription |
-| **4. Platform** | M13-M24 (Apr 2027 - Mar 2028) | API as a service, SDK, webhook ecosystem, agency outbound | Commissione + Subscription + API usage |
+| **4. Scale** | M13-M24 (Apr 2027 - Mar 2028) | SDK client, webhook ecosystem, agency outbound, API usage pricing | Commissione + Subscription + API usage |
 
 ---
 
@@ -85,14 +87,15 @@ Il segmento platform (M12+): developer e agency che costruiscono ecommerce per c
 - **Churn Pro/Business:** 5%/mese nei primi mesi, 3%/mese a regime
 - **API usage revenue (da M15):** $0.01/API call sopra 10K calls/mese. Stima: 5% degli store usa API, 50K calls/mese media
 
-### Platform revenue (da M13)
+### Platform revenue (API pubblica dal giorno 1)
 
-Dal M13, Fooshop inizia la transizione da "vendi i tuoi prodotti" a "costruisci il tuo ecommerce su Fooshop":
+L'API è documentata e disponibile al lancio. I segmenti freelancer/agency/startup possono usare Fooshop come backend dal giorno 1, senza aspettare una "fase platform".
+
 - **API as a service:** developer/agency usano Fooshop come backend commerce per progetti custom
-- **Revenue model:** subscription base + API usage overage (modello Stripe/Vercel)
+- **Revenue iniziale:** stessi tier (Free 8%, Pro $19, Business $49). Il freelancer paga Pro/Business per progetto
+- **Revenue evoluta (da M13):** API usage pricing — $0.01/API call sopra 10K/mese + 1% transaction fee
 - **Target:** agency, freelancer, startup che costruiscono ecommerce per clienti
-- **Pricing API:** $49/mese base (= tier Business) + $0.01/API call sopra 10K/mese + 1% transaction fee
-- **Stima conservativa:** 20 API customer a M18, 80 a M24, ARPU $200/mese
+- **Stima:** primi API-heavy customer da M3-M6 (organici dal lancio HN), 20 a M12, 80 a M24, ARPU $200/mese
 
 ### Costi
 
@@ -342,9 +345,9 @@ Valuation stimata: **$50-80M** (15-22x ARR, premium per platform play + AI narra
 ## Timeline Operativa
 
 ```
-M1  Apr 2026  CLI MVP + MCP write/purchase
-M2  Mag 2026  Landing page developer + beta testing
-M3  Giu 2026  LANCIO HN + npm publish
+M1  Apr 2026  CLI MVP + MCP write/purchase + API docs
+M2  Mag 2026  Landing page "Add commerce to anything" + beta testing
+M3  Giu 2026  LANCIO HN + npm publish (CLI + MCP + API docs)
 M4  Lug 2026  Iterate su feedback, fix, polish
 M5  Ago 2026  Prodotti fisici + Resend email
 M6  Set 2026  PMF checkpoint. 350 store target
@@ -353,7 +356,7 @@ M8  Nov 2026  Dashboard redesign v1
 M9  Dic 2026  Primo dev hire
 M10 Gen 2027  CLI v2 (più comandi, polish)
 M11 Feb 2027  MCP server v2 (più tool, auth migliorata)
-M12 Mar 2027  REVIEW ANNUALE. $14K MRR target
+M12 Mar 2027  REVIEW ANNUALE. $25K MRR target
 M13 Apr 2027  Growth hire. Paid acquisition test
 M14 Mag 2027  API documentation pubblica
 M15 Giu 2027  API as a service (beta). Primi API customer

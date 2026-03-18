@@ -8,25 +8,41 @@
 
 ## Posizionamento e Target
 
-**Fooshop — Il Vercel dell'ecommerce.**
+**Fooshop — Add commerce to anything. One command. One API.**
 
 `fooshop init` → il tuo store è live. CLI-first, AI-native, MCP-enabled.
 
-**Target:** Developer che vogliono vendere qualsiasi cosa (digitale o fisica) senza configurare nulla. Non è un'alternativa a Gumroad — è per chi non avrebbe mai aperto un Gumroad.
+**Pitch:** Non è "il Vercel dell'ecommerce" — è "commerce come capability". Chiunque costruisce ecommerce (per sé o per altri) ha un backend commerce pronto in 30 secondi.
 
-**Pitch:** "Il modo più veloce per un developer di vendere qualsiasi cosa online."
+**Target segments:**
+
+| Segmento | Chi sono | Come usano Fooshop | ARPU |
+|----------|----------|-------------------|------|
+| Indie developer | Vende i propri template, boilerplate, corsi | `fooshop init` → vende | $0-49/mese |
+| Freelancer | Costruisce ecommerce per clienti | Fooshop API per ogni progetto cliente | $49-149/mese |
+| Agency | Team con 10-50+ progetti ecommerce | Stack standard per tutti i progetti | $200-500/mese |
+| Startup | Ha bisogno di commerce nel prodotto | Fooshop API embedded | $200-2000/mese |
+| Enterprise/SaaS | Commerce layer nel proprio prodotto | API + custom integration | $2000+/mese |
 
 **Differenziatori:**
 - CLI come interfaccia primaria (nessun competitor ce l'ha)
+- API pubblica documentata dal giorno 1 (non un'evoluzione futura)
 - MCP server per vendere e comprare via agenti AI
 - AI genera store, copy, metadati
 - Fisico + digitale
 - Pricing developer-friendly (free tier generoso, 0% commissione al tier top)
 
+**Perché non è Shopify:**
+- Shopify è per merchant che i developer customizzano. Fooshop è infrastruttura per developer che i merchant non vedono
+- Shopify richiede settimane di setup. Fooshop: `fooshop init`
+- Shopify headless (Hydrogen) è complesso. Fooshop API è semplice
+- Shopify non ha CLI per gestire store, né MCP server
+
 **NON è:**
 - Un marketplace (non c'è una homepage "esplora prodotti" come focus primario)
 - Un'alternativa cheap a Gumroad
 - Un framework self-hostable
+- Un clone di Shopify per developer
 
 ---
 
@@ -190,13 +206,14 @@ Le seguenti feature sopravvivono al pivot:
 
 - CLI funzionante (`init`, `login`, `products add`, `orders list`)
 - MCP server con read + write + purchase
+- API documentation pubblica (le API esistono già, servono docs)
 - 3-5 store demo con prodotti reali
-- Landing page riscritta con posizionamento developer
+- Landing page riscritta con posizionamento developer ("Add commerce to anything")
 - Commissione 8% (tier Free, unico tier al lancio)
 
 ### Cosa NON serve prima del lancio
 
-- 50 creator reali
+- 50 creator/developer reali
 - Dashboard redesign
 - Prodotti fisici (arriva subito dopo)
 - Tier Pro/Business e Stripe Billing (arriva dopo validazione)
@@ -204,7 +221,7 @@ Le seguenti feature sopravvivono al pivot:
 
 ### Sequenza
 
-1. CLI + MCP server esteso + landing page nuova → **lancio**
+1. CLI + MCP server esteso + API docs + landing page nuova → **lancio**
 2. Feedback + iterazione
 3. Prodotti fisici + email (Resend)
 4. Tier Pro/Business + Stripe Billing
@@ -231,7 +248,7 @@ Le seguenti feature sopravvivono al pivot:
 |------|------|------|
 | Posizionamento | Marketplace per creator | Piattaforma ecommerce per developer |
 | Interfaccia primaria | Dashboard web | CLI + dashboard |
-| Landing page | "Sell digital products with zero upfront costs" | "Deploy an e-commerce store from your terminal" |
+| Landing page | "Sell digital products with zero upfront costs" | "Add commerce to anything. One command. One API." |
 | Prodotti | Solo digitali | Digitali + fisici (dumb shipping) — post-lancio |
 | MCP server | Read + `get_checkout_url` | Read + Write + Purchase (con auth) |
 | Pricing | 5% flat | Free 8% / Pro $19 3% / Business $49 0% |
@@ -244,24 +261,25 @@ Le seguenti feature sopravvivono al pivot:
 1. **CLI npm package** (`fooshop`) — nuovo
 2. **CLI auth flow** — browser OAuth → localhost callback → API key salvata. Estensione del sistema API keys esistente
 3. **API key auth middleware** — le route API accettano sia session che API key
-4. **MCP server write tools** — `create_store`, `add_product`, `update_product` (con auth via API key)
-5. **MCP `purchase_product`** — evoluzione di `get_checkout_url` esistente
-6. **Landing page** — riscrittura con posizionamento developer
-7. **Commissione 8%** — aggiornamento `DEFAULT_COMMISSION_PERCENT`
+4. **API documentation** — le API routes esistono già, servono docs pubbliche (README o /docs)
+5. **MCP server write tools** — `create_store`, `add_product`, `update_product` (con auth via API key)
+6. **MCP `purchase_product`** — evoluzione di `get_checkout_url` esistente
+7. **Landing page** — riscrittura con posizionamento "Add commerce to anything"
+8. **Commissione 8%** — aggiornamento `DEFAULT_COMMISSION_PERCENT`
 
 **Post-lancio:**
-8. **Prodotti fisici** — campo `type` su products, `shipping_address` su orders, Stripe `shipping_address_collection`
-9. **Email transazionali** — Resend integration per conferme ordine e notifiche seller
-10. **Pricing tiers** — campo `tier` su creators, Stripe Billing integration, subscription webhooks
-11. **Dashboard redesign** — iterativo
+9. **Prodotti fisici** — campo `type` su products, `shipping_address` su orders, Stripe `shipping_address_collection`
+10. **Email transazionali** — Resend integration per conferme ordine e notifiche seller
+11. **Pricing tiers** — campo `tier` su creators, Stripe Billing integration, subscription webhooks
+12. **Dashboard redesign** — iterativo
 
 ---
 
 ## Evoluzione futura (non per il lancio)
 
-### Da A (hosted platform) a C (API as a service)
+### API as a service
 
-Quando i developer chiedono "posso usare Fooshop come backend per il mio frontend custom?", si espone l'API come servizio. Stessa sequenza di Vercel: hosted first, API after.
+L'API è pubblica dal giorno 1 (documentata). L'evoluzione è aggiungere: rate limiting per tier, usage tracking, API analytics dashboard, SDK client (JS/Python). Quando freelancer e agency iniziano a usare Fooshop come backend per progetti clienti, aggiungere pricing usage-based.
 
 ### Acquisti via agente AI
 

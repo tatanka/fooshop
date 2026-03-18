@@ -8,25 +8,50 @@
 
 ## Posizionamento e Target
 
-**Fooshop — Il Vercel dell'ecommerce.**
+**Fooshop — Commerce that lives where you work.**
 
-`fooshop init` → il tuo store è live. CLI-first, AI-native, MCP-enabled.
+Nel 2026 il developer vive nel terminale con un AI assistant. Qualsiasi tool che lo costringe ad aprire un browser e cliccare su una UI è frizione. Shopify, Gumroad, WooCommerce — tutti ti tirano fuori dal tuo workflow. Fooshop no.
 
-**Target:** Developer che vogliono vendere qualsiasi cosa (digitale o fisica) senza configurare nulla. Non è un'alternativa a Gumroad — è per chi non avrebbe mai aperto un Gumroad.
+`fooshop init` → store live. Parli con Claude → gestisci lo shop via MCP. Chiami l'API → commerce embedded nel tuo prodotto. Senza mai lasciare il terminale.
 
-**Pitch:** "Il modo più veloce per un developer di vendere qualsiasi cosa online."
+**Il pain:** Ogni strumento commerce ti tira fuori dal tuo workflow. Più gli AI assistant diventano il modo di lavorare, più qualsiasi UI web diventa un'interruzione. Questo pain peggiora nel tempo, non migliora.
+
+**La soluzione:** Commerce che vive dove lavori — terminale, AI assistant, API. Non un'interfaccia web con un'API attaccata. Un'infrastruttura commerce nativa per l'era degli AI coding tools.
+
+**L'esperienza killer:** Il developer dice a Claude Code "crea uno store su Fooshop e vendici il mio template a $49". Claude Code legge la documentazione da Context7, esegue i comandi CLI, e lo store è live. Nessun onboarding, nessuna UI, nessun comando da imparare. Commerce conversazionale con il tuo AI assistant.
+
+**Tagline:** "Add commerce to anything. One command. One API."
+
+**Target segments:**
+
+| Segmento | Chi sono | Come usano Fooshop | ARPU |
+|----------|----------|-------------------|------|
+| Indie developer | Vende i propri template, boilerplate, corsi | `fooshop init` → vende. Gestisce via Claude + MCP | $0-49/mese |
+| Freelancer | Costruisce ecommerce per clienti | Fooshop API per ogni progetto. Setup in un'ora, non in una settimana | $49-149/mese |
+| Agency | Team con 10-50+ progetti ecommerce | Stack standard per tutti i progetti. CLI per gestione multi-store | $200-500/mese |
+| Startup | Ha bisogno di commerce nel prodotto | Fooshop API embedded. Non serve costruire un backend commerce | $200-2000/mese |
+| Enterprise/SaaS | Commerce layer nel proprio prodotto | API + custom integration | $2000+/mese |
 
 **Differenziatori:**
-- CLI come interfaccia primaria (nessun competitor ce l'ha)
-- MCP server per vendere e comprare via agenti AI
-- AI genera store, copy, metadati
-- Fisico + digitale
-- Pricing developer-friendly (free tier generoso, 0% commissione al tier top)
+- **CLI-first:** commerce dal terminale. Nessun competitor ce l'ha
+- **MCP-native:** gestisci il tuo shop parlando con Claude/Cursor/Gemini. Il primo ecommerce operabile da AI assistant
+- **Context7/Context Hub ready:** la documentazione CLI è leggibile da AI coding tools. Zero onboarding — l'AI sa già come usare Fooshop
+- **API pubblica dal giorno 1:** non un'evoluzione futura, il core del prodotto
+- **AI genera store, copy, metadati:** zero configurazione
+- **Digitale + fisico:** un'unica piattaforma
+- **Pricing developer-friendly:** free tier generoso, 0% commissione al tier top
+
+**Perché nessun incumbent può copiarlo:**
+- **Shopify** è costruito per merchant che cliccano su UI. Il loro business model dipende dalla web UI. Non faranno mai CLI-first — ucciderebbe il loro prodotto
+- **Gumroad** è in maintenance mode dal 2024. ~1 dipendente. Non sta costruendo nulla
+- **Stripe** fa payment, non storefront. È complementare, non competitore
+- **Commercetools/Commerce Layer** costano $200K+/anno e richiedono mesi di setup. Fooshop è 30 secondi
 
 **NON è:**
 - Un marketplace (non c'è una homepage "esplora prodotti" come focus primario)
-- Un'alternativa cheap a Gumroad
+- Un'alternativa cheap a Gumroad (stessa fee o più alta, 10x più valore)
 - Un framework self-hostable
+- Una UI web con un'API attaccata — è il contrario
 
 ---
 
@@ -176,8 +201,9 @@ Le seguenti feature sopravvivono al pivot:
 
 1. **`fooshop` su npm** — il developer installa e prova in 30 secondi
 2. **`@fooshop/mcp` su npm** — il primo ecommerce acquistabile da agenti AI
-3. **Video demo (30-60 sec):** terminale, `fooshop init`, store live. Poi un agente AI che trova il prodotto e genera un checkout link
-4. **Post su Hacker News:** "Show HN: Fooshop — deploy an e-commerce store from your terminal"
+3. **Docs su Context7** — Claude Code/Cursor leggono automaticamente la documentazione. Zero onboarding
+4. **Video demo (30-60 sec):** un developer dice a Claude Code "crea uno store su Fooshop e vendici il mio template a $49". Store live in 30 secondi. Nessun comando digitato manualmente
+5. **Post su Hacker News:** "Show HN: Fooshop — manage an e-commerce store from your AI assistant"
 
 ### Canali
 
@@ -190,13 +216,16 @@ Le seguenti feature sopravvivono al pivot:
 
 - CLI funzionante (`init`, `login`, `products add`, `orders list`)
 - MCP server con read + write + purchase
+- API documentation pubblica (le API esistono già, servono docs)
+- Docs pubblicate su Context7 (Claude Code/Cursor leggono automaticamente)
 - 3-5 store demo con prodotti reali
-- Landing page riscritta con posizionamento developer
+- Landing page riscritta con posizionamento "Commerce that lives where you work"
 - Commissione 8% (tier Free, unico tier al lancio)
+- Video demo: Claude Code crea e gestisce uno store via CLI
 
 ### Cosa NON serve prima del lancio
 
-- 50 creator reali
+- 50 creator/developer reali
 - Dashboard redesign
 - Prodotti fisici (arriva subito dopo)
 - Tier Pro/Business e Stripe Billing (arriva dopo validazione)
@@ -204,7 +233,7 @@ Le seguenti feature sopravvivono al pivot:
 
 ### Sequenza
 
-1. CLI + MCP server esteso + landing page nuova → **lancio**
+1. CLI + MCP server esteso + API docs + landing page nuova → **lancio**
 2. Feedback + iterazione
 3. Prodotti fisici + email (Resend)
 4. Tier Pro/Business + Stripe Billing
@@ -231,7 +260,7 @@ Le seguenti feature sopravvivono al pivot:
 |------|------|------|
 | Posizionamento | Marketplace per creator | Piattaforma ecommerce per developer |
 | Interfaccia primaria | Dashboard web | CLI + dashboard |
-| Landing page | "Sell digital products with zero upfront costs" | "Deploy an e-commerce store from your terminal" |
+| Landing page | "Sell digital products with zero upfront costs" | "Add commerce to anything. One command. One API." |
 | Prodotti | Solo digitali | Digitali + fisici (dumb shipping) — post-lancio |
 | MCP server | Read + `get_checkout_url` | Read + Write + Purchase (con auth) |
 | Pricing | 5% flat | Free 8% / Pro $19 3% / Business $49 0% |
@@ -244,24 +273,25 @@ Le seguenti feature sopravvivono al pivot:
 1. **CLI npm package** (`fooshop`) — nuovo
 2. **CLI auth flow** — browser OAuth → localhost callback → API key salvata. Estensione del sistema API keys esistente
 3. **API key auth middleware** — le route API accettano sia session che API key
-4. **MCP server write tools** — `create_store`, `add_product`, `update_product` (con auth via API key)
-5. **MCP `purchase_product`** — evoluzione di `get_checkout_url` esistente
-6. **Landing page** — riscrittura con posizionamento developer
-7. **Commissione 8%** — aggiornamento `DEFAULT_COMMISSION_PERCENT`
+4. **API documentation** — le API routes esistono già, servono docs pubbliche (README o /docs)
+5. **MCP server write tools** — `create_store`, `add_product`, `update_product` (con auth via API key)
+6. **MCP `purchase_product`** — evoluzione di `get_checkout_url` esistente
+7. **Landing page** — riscrittura con posizionamento "Add commerce to anything"
+8. **Commissione 8%** — aggiornamento `DEFAULT_COMMISSION_PERCENT`
 
 **Post-lancio:**
-8. **Prodotti fisici** — campo `type` su products, `shipping_address` su orders, Stripe `shipping_address_collection`
-9. **Email transazionali** — Resend integration per conferme ordine e notifiche seller
-10. **Pricing tiers** — campo `tier` su creators, Stripe Billing integration, subscription webhooks
-11. **Dashboard redesign** — iterativo
+9. **Prodotti fisici** — campo `type` su products, `shipping_address` su orders, Stripe `shipping_address_collection`
+10. **Email transazionali** — Resend integration per conferme ordine e notifiche seller
+11. **Pricing tiers** — campo `tier` su creators, Stripe Billing integration, subscription webhooks
+12. **Dashboard redesign** — iterativo
 
 ---
 
 ## Evoluzione futura (non per il lancio)
 
-### Da A (hosted platform) a C (API as a service)
+### API as a service
 
-Quando i developer chiedono "posso usare Fooshop come backend per il mio frontend custom?", si espone l'API come servizio. Stessa sequenza di Vercel: hosted first, API after.
+L'API è pubblica dal giorno 1 (documentata). L'evoluzione è aggiungere: rate limiting per tier, usage tracking, API analytics dashboard, SDK client (JS/Python). Quando freelancer e agency iniziano a usare Fooshop come backend per progetti clienti, aggiungere pricing usage-based.
 
 ### Acquisti via agente AI
 
@@ -271,3 +301,11 @@ Futuro: token di pagamento pre-autorizzati per acquisti autonomi da parte degli 
 ### CLI scriptabile
 
 Flag `--json` su tutti i comandi, pipe support, integrazione CI/CD. Arriva naturalmente dopo la CLI base.
+
+### Everything Store per agenti AI (stella polare)
+
+Ogni store su Fooshop alimenta automaticamente il catalogo MCP. Man mano che gli store crescono (10K+), Fooshop diventa il catalogo commerce più grande accessibile da agenti AI. Il flywheel: più store → catalogo MCP più ricco → più agenti lo usano → più buyer → più store vogliono essere su Fooshop.
+
+Revenue aggiuntive a scala: discovery fee (agente trova prodotto → fee sulla transazione), priority placement (promoted results nel catalogo MCP), API usage per aziende che costruiscono agenti.
+
+Fooshop diventa dove gli agenti AI vanno a fare shopping.

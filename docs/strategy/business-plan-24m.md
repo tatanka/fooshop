@@ -10,18 +10,54 @@
 
 Fooshop è una piattaforma ecommerce per developer. `fooshop init` deploya uno store live in 30 secondi. CLI-first, AI-native, MCP-enabled. Il primo ecommerce dove agenti AI possono cercare e comprare prodotti.
 
-Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business). Bootstrap da Exelab fino a PMF, poi Series A.
+Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business) + API usage (fase platform). Bootstrap da Exelab fino a PMF, poi Series A.
+
+---
+
+## Dimensione del mercato
+
+### TAM (Total Addressable Market)
+
+| Mercato | Size 2025 | CAGR | Source |
+|---------|-----------|------|--------|
+| Headless commerce | $1.74B | 22.4% | Coherent Market Insights |
+| Ecommerce API/platform | $21.3B | 18.4% | Grand View Research |
+| Developer tools | $7.5B | 16% | Mordor Intelligence |
+
+### Comparable
+
+| Azienda | ARR | Valuation | Modello |
+|---------|-----|-----------|---------|
+| Vercel | $200M+ (2025) | $9.3B | Developer platform (hosting → API → framework) |
+| Stripe | $19.4B revenue | $106.7B | API-first payments → commerce platform |
+| Shopify ecosystem | $1.5B+ pagato a dev | — | 13K+ app, 80% merchant usa app terze parti |
+| Railway | — | $100M Series B (Gen 2026) | Developer platform |
+
+### SAM (Serviceable Addressable Market)
+
+**180M+ developer su GitHub** (Octoverse 2025), con +36M nuovi nel solo 2025.
+
+Il segmento target immediato: developer che vendono o vorrebbero vendere prodotti digitali/fisici. Stimato conservativamente 1-3% dei developer attivi = **1.8M-5.4M potenziali utenti**.
+
+Il segmento platform (M12+): developer e agency che costruiscono ecommerce per clienti usando Fooshop come backend. Il mercato headless commerce ($1.74B, +22.4% CAGR) è il riferimento diretto.
+
+### Perché il timing è giusto
+
+- **Vibe coding era:** il costo di costruire un frontend custom è crollato. Serve un backend commerce altrettanto semplice
+- **AI agents:** nessuna piattaforma ecommerce ha un MCP server. Fooshop è il primo catalogo acquistabile da agenti AI
+- **Developer fatigue:** Shopify è per merchant, non developer. Gumroad è per creator, non developer. Non esiste un ecommerce CLI-first
+- **73% delle aziende** usa già architettura headless (Swell, 2025). Il mercato è educato
 
 ---
 
 ## Fasi
 
-| Fase | Periodo | Focus |
-|------|---------|-------|
-| **1. Build & Launch** | M1-M3 (Apr-Giu 2026) | CLI + MCP server + landing page. Lancio su HN |
-| **2. Validate** | M4-M6 (Lug-Set 2026) | Feedback loop, iterate, prodotti fisici, email |
-| **3. Monetize** | M7-M12 (Ott 2026 - Mar 2027) | Tier Pro/Business, Stripe Billing, dashboard redesign |
-| **4. Scale** | M13-M24 (Apr 2027 - Mar 2028) | Paid acquisition, hiring, API as a service |
+| Fase | Periodo | Focus | Revenue model |
+|------|---------|-------|---------------|
+| **1. Build & Launch** | M1-M3 (Apr-Giu 2026) | CLI + MCP server + landing page. Lancio su HN | Commissione 8% |
+| **2. Validate** | M4-M6 (Lug-Set 2026) | Feedback loop, iterate, prodotti fisici, email | Commissione 8% |
+| **3. Monetize** | M7-M12 (Ott 2026 - Mar 2027) | Tier Pro/Business, Stripe Billing, dashboard redesign | Commissione + Subscription |
+| **4. Platform** | M13-M24 (Apr 2027 - Mar 2028) | API as a service, SDK, webhook ecosystem, agency outbound | Commissione + Subscription + API usage |
 
 ---
 
@@ -44,8 +80,19 @@ Modello di revenue ibrido: commissione (Free tier) + subscription (Pro/Business)
 
 - **Free → Pro:** 10% a M12, 15% a M18, 20% a M24
 - **Pro → Business:** 5% dei Pro a M12, 10% a M24
-- **GMV medio/store/mese:** $300 (M6), $500 (M12), $700 (M18), $900 (M24)
+- **GMV medio/store/mese:** $500 (M6), $800 (M12), $1,100 (M18), $1,400 (M24)
+  - Razionale: developer vendono prodotti a prezzo più alto (boilerplate $99-299, corsi $49-199, component kit $29-99) rispetto a creator template ($15-49)
 - **Churn Pro/Business:** 5%/mese nei primi mesi, 3%/mese a regime
+- **API usage revenue (da M15):** $0.01/API call sopra 10K calls/mese. Stima: 5% degli store usa API, 50K calls/mese media
+
+### Platform revenue (da M13)
+
+Dal M13, Fooshop inizia la transizione da "vendi i tuoi prodotti" a "costruisci il tuo ecommerce su Fooshop":
+- **API as a service:** developer/agency usano Fooshop come backend commerce per progetti custom
+- **Revenue model:** subscription base + API usage overage (modello Stripe/Vercel)
+- **Target:** agency, freelancer, startup che costruiscono ecommerce per clienti
+- **Pricing API:** $49/mese base (= tier Business) + $0.01/API call sopra 10K/mese + 1% transaction fee
+- **Stima conservativa:** 20 API customer a M18, 80 a M24, ARPU $200/mese
 
 ### Costi
 
@@ -82,39 +129,47 @@ Note: "Attivi" = hanno almeno 1 prodotto pubblicato e 1 vendita negli ultimi 90 
 3. **Subscription Business ($49/mese)**
 4. **Commissione Pro tier (3% del GMV degli store Pro)**
 5. **Commissione Business tier (0%)** — nessuna revenue da commissione
+6. **API platform revenue (da M15)** — subscription + usage fee per chi usa Fooshop come backend
 
 ### Revenue mensile
 
-| Mese | GMV Free | Comm. 8% | GMV Pro | Comm. 3% | Sub Pro | Sub Biz | **MRR** |
-|------|----------|----------|---------|----------|---------|---------|---------|
-| **M3** | $31K | $2.5K | — | — | — | — | **$2.5K** |
-| **M6** | $74K | $5.9K | — | — | — | — | **$5.9K** |
-| **M9** | $105K | $8.4K | $18K | $525 | $665 | $98 | **$9.7K** |
-| **M12** | $151K | $12.1K | $28K | $840 | $1,064 | $147 | **$14.1K** |
-| **M15** | $184K | $14.7K | $74K | $2.2K | $2,000 | $392 | **$19.3K** |
-| **M18** | $215K | $17.2K | $132K | $4.0K | $3,591 | $735 | **$25.5K** |
-| **M21** | $275K | $22.0K | $224K | $6.7K | $6,080 | $1,225 | **$36.0K** |
-| **M24** | $336K | $26.9K | $392K | $11.8K | $10,640 | $2,205 | **$51.5K** |
+| Mese | GMV Free | Comm. 8% | GMV Pro | Comm. 3% | Sub Pro | Sub Biz | API Platform | **MRR** |
+|------|----------|----------|---------|----------|---------|---------|-------------|---------|
+| **M3** | $53K | $4.2K | — | — | — | — | — | **$4.2K** |
+| **M6** | $123K | $9.8K | — | — | — | — | — | **$9.8K** |
+| **M9** | $185K | $14.8K | $31K | $924 | $665 | $98 | — | **$16.5K** |
+| **M12** | $282K | $22.5K | $54K | $1.6K | $1,064 | $147 | — | **$25.3K** |
+| **M15** | $370K | $29.6K | $127K | $3.8K | $2,000 | $392 | $4K | **$39.8K** |
+| **M18** | $444K | $35.5K | $228K | $6.8K | $3,591 | $735 | $8K | **$54.7K** |
+| **M21** | $567K | $45.4K | $388K | $11.6K | $6,080 | $1,225 | $12K | **$76.3K** |
+| **M24** | $672K | $53.8K | $588K | $17.6K | $10,640 | $2,205 | $16K | **$100.3K** |
+
+Note: GMV/store/mese ricalcolato: $500 (M6), $800 (M12), $1,100 (M18), $1,400 (M24). API platform: 20 customer a M15 ($200 ARPU) → 80 a M24 ($200 ARPU).
 
 ### Revenue cumulata
 
 | Periodo | Revenue cumulata | MRR fine periodo |
 |---------|-----------------|-----------------|
-| **M6** | ~$25K | $5.9K |
-| **M12** | ~$85K | $14.1K |
-| **M18** | ~$210K | $25.5K |
-| **M24** | ~$430K | $51.5K |
-| **ARR a M24** | | **~$618K** |
+| **M6** | ~$42K | $9.8K |
+| **M12** | ~$168K | $25.3K |
+| **M18** | ~$410K | $54.7K |
+| **M24** | ~$860K | $100.3K |
+| **ARR a M24** | | **~$1.2M** |
 
 ### Mix revenue a M24
 
 | Stream | MRR | % del totale |
 |--------|-----|-------------|
-| Commissione Free (8%) | $26.9K | 52% |
-| Commissione Pro (3%) | $11.8K | 23% |
-| Subscription Pro ($19) | $10.6K | 21% |
-| Subscription Business ($49) | $2.2K | 4% |
-| **Totale** | **$51.5K** | **100%** |
+| Commissione Free (8%) | $53.8K | 54% |
+| Commissione Pro (3%) | $17.6K | 18% |
+| Subscription Pro ($19) | $10.6K | 10% |
+| Subscription Business ($49) | $2.2K | 2% |
+| API Platform | $16K | 16% |
+| **Totale** | **$100.3K** | **100%** |
+
+### La transizione platform è il moltiplicatore
+
+A M24 l'API platform è solo il 16% della revenue. Ma è il stream con la crescita più rapida e l'ARPU più alto ($200/mese vs $19-49 subscription). Nel Y3, se il platform play funziona, l'API revenue supera la commissione come stream principale — stessa traiettoria di Stripe (da payment processing a commerce platform) e Vercel (da hosting a infrastruttura).
 
 ---
 
@@ -150,12 +205,12 @@ Note: "Attivi" = hanno almeno 1 prodotto pubblicato e 1 vendita negli ultimi 90 
 
 | Mese | MRR | Costi/mese | **Profit/mese** | Cumulato |
 |------|-----|-----------|----------------|----------|
-| **M6** | $5.9K | $350 | +$5.6K | +$23K |
-| **M12** | $14.1K | $6.3K | +$7.8K | +$45K |
-| **M18** | $25.5K | $13.6K | +$11.9K | +$88K |
-| **M24** | $51.5K | $20.2K | +$31.3K | +$187K |
+| **M6** | $9.8K | $350 | +$9.5K | +$40K |
+| **M12** | $25.3K | $6.3K | +$19K | +$126K |
+| **M18** | $54.7K | $13.6K | +$41.1K | +$284K |
+| **M24** | $100.3K | $20.2K | +$80.1K | +$617K |
 
-**Il business è profittevole dal giorno 1** (escluso il costo opportunità del fondatore pagato da Exelab). Questo è un vantaggio enorme del bootstrap: nessuna pressione da burn rate.
+**Il business è profittevole dal giorno 1** (escluso il costo opportunità del fondatore pagato da Exelab). Margine operativo a M24: ~80%.
 
 ---
 
@@ -164,12 +219,10 @@ Note: "Attivi" = hanno almeno 1 prodotto pubblicato e 1 vendita negli ultimi 90 
 | Voce | Y1 (M1-M12) | Y2 (M13-M24) |
 |------|-------------|-------------|
 | Costi operativi | $42K | $201K |
-| Revenue Fooshop | -$85K | -$345K |
-| **Net da Exelab** | **$0 (autofinanziato da M8)** | **$0 (profittevole)** |
+| Revenue Fooshop | -$168K | -$692K |
+| **Net da Exelab** | **$0 (autofinanziato da M5)** | **$0 (profittevole)** |
 
-Con il modello developer-first, i costi pre-hire sono bassissimi (~$350/mese). Il revenue da commissione copre i costi infrastrutturali quasi subito. L'hire a M7 è il primo vero costo, ma a quel punto l'MRR è ~$10K.
-
-**Investimento totale Exelab stimato: $15-30K** (solo i primi 6-8 mesi prima che Fooshop si autofinanzi). Molto meno del $435-725K stimato nel piano precedente, perché il modello developer-first ha costi operativi molto più bassi e non richiede paid acquisition pre-PMF.
+**Investimento totale Exelab stimato: $10-20K** (solo i primi 4-5 mesi). Fooshop si autofinanzia molto rapidamente grazie ai costi operativi bassissimi e al GMV developer più alto.
 
 ---
 
@@ -188,11 +241,12 @@ Con il modello developer-first, i costi pre-hire sono bassissimi (~$350/mese). I
 | Mese | Milestone | Decision gate |
 |------|-----------|--------------|
 | M3 | Lancio HN. 100+ store | Se <30 store: pivot o kill |
-| M6 | 350 store, $5.9K MRR | Se <$3K MRR: ripensare pricing o target |
+| M6 | 350 store, $9.8K MRR | Se <$5K MRR: ripensare pricing o target |
 | M9 | Tier Pro/Business live | Se <5% conversion Pro: free tier troppo generoso? |
-| M12 | 800 store, $14.1K MRR, primo hire | Se <$10K MRR: non fare hire, resta lean |
-| M18 | 1,800 store, $25.5K MRR | Se >$20K MRR: iniziare conversazioni Series A |
-| M24 | 4,000 store, $51.5K MRR, $618K ARR | Series A ready se growth >100% YoY |
+| M12 | 800 store, $25.3K MRR, primo hire | Se <$15K MRR: non fare hire, resta lean |
+| M15 | API as a service beta. Primi API customer | Se 0 API customer: il platform play è prematuro, focus su store |
+| M18 | 1,800 store, $54.7K MRR | Se >$40K MRR: iniziare conversazioni Series A |
+| M24 | 4,000 store, $100K MRR, $1.2M ARR | Series A ready |
 
 ### Kill criteria
 
@@ -220,30 +274,33 @@ Con il modello developer-first, i costi pre-hire sono bassissimi (~$350/mese). I
 | | M12 | M24 |
 |---|---|---|
 | Store attivi | 300 | 1,200 |
-| MRR | $6K | $22K |
-| ARR | $72K | $264K |
+| MRR | $10K | $40K |
+| ARR | $120K | $480K |
+| API customers | 0 | 10 |
 
-Fooshop resta un side project profittevole. Non giustifica hiring ma genera revenue.
+Fooshop è un business piccolo ma profittevole. Platform play non decolla. Team di 2. Niente raise.
 
 ### Base (piano sopra)
 
 | | M12 | M24 |
 |---|---|---|
 | Store attivi | 560 | 2,800 |
-| MRR | $14.1K | $51.5K |
-| ARR | $169K | $618K |
+| MRR | $25.3K | $100.3K |
+| ARR | $304K | $1.2M |
+| API customers | 0 | 80 |
 
-Business reale. Team di 2-3. Series A possibile a M24.
+Business reale. Team di 3. Series A a M24. La transizione a platform è iniziata.
 
-### Optimistic (lancio HN esplode, word-of-mouth forte)
+### Accelerated (lancio HN esplode + platform play decolla)
 
 | | M12 | M24 |
 |---|---|---|
-| Store attivi | 1,500 | 8,000 |
-| MRR | $40K | $150K |
-| ARR | $480K | $1.8M |
+| Store attivi | 1,500 | 10,000 |
+| MRR | $70K | $300K |
+| ARR | $840K | $3.6M |
+| API customers | 10 | 300 |
 
-Series A a M18. Team di 5+. Inizio espansione API as a service.
+In questo scenario il platform play è il driver: agency e developer usano Fooshop come backend commerce. L'API revenue cresce più velocemente delle commissioni. Series A a M15-M18. Team di 8+.
 
 ---
 
@@ -253,22 +310,32 @@ Series A a M18. Team di 5+. Inizio espansione API as a service.
 
 | Metrica | Valore |
 |---------|--------|
-| ARR | $618K |
+| ARR | $1.2M |
 | Growth YoY | >200% |
 | Gross margin | >85% |
 | Store attivi | 2,800 |
-| Net revenue retention | >110% (upgrade Free→Pro) |
+| API customers | 80 |
+| Net revenue retention | >120% (upgrade Free→Pro + API expansion) |
 
-Con >200% growth e >85% margin, valuation stimata: **$6-12M** (10-20x ARR). Sufficiente per un seed/pre-Series A da $2-3M a diluzione accettabile (15-20%).
+Con >200% growth, >85% margin, e una nascente API platform, valuation stimata: **$12-25M** (10-20x ARR). Series A da $3-5M a diluzione 15-20%.
 
-### Scenario optimistic
+### Scenario accelerated
 
 | Metrica | Valore |
 |---------|--------|
-| ARR | $1.8M |
+| ARR | $3.6M |
 | Growth YoY | >300% |
+| API customers | 300 |
 
-Valuation stimata: **$25-40M**. Series A da $5-8M a 15% diluzione.
+Valuation stimata: **$50-80M** (15-22x ARR, premium per platform play + AI narrative). Series A da $8-15M a 15% diluzione.
+
+### Perché un investor ci crederebbe
+
+1. **$1.74B headless commerce market** a 22.4% CAGR — Fooshop è il primo player CLI-first e AI-native
+2. **Vercel playbook validato:** developer platform → $200M ARR → $9.3B valuation. Stessa traiettoria, vertical commerce
+3. **Espansione naturale:** store → API → SDK → marketplace plugin. Ogni layer moltiplica il revenue per utente
+4. **Margini >85%** con costi infrastrutturali minimi
+5. **Network effect:** più store → catalogo MCP più ricco → più agenti AI usano Fooshop → più buyer → più store
 
 ---
 
@@ -287,16 +354,16 @@ M9  Dic 2026  Primo dev hire
 M10 Gen 2027  CLI v2 (più comandi, polish)
 M11 Feb 2027  MCP server v2 (più tool, auth migliorata)
 M12 Mar 2027  REVIEW ANNUALE. $14K MRR target
-M13 Apr 2027  Growth hire
-M14 Mag 2027  Paid acquisition test
-M15 Giu 2027  API documentation pubblica
-M16 Lug 2027  API as a service (beta)
-M17 Ago 2027  SDK client (JS/Python)
-M18 Set 2027  CHECKPOINT. $25K MRR. Series A conversations?
-M19 Ott 2027  Espansione canali paid
-M20 Nov 2027  Dashboard v2 (tipo Render)
-M21 Dic 2027  Plugin/webhook ecosystem
-M22 Gen 2028  CLI scriptabile (--json, pipe, CI/CD)
-M23 Feb 2028  Outbound enterprise/agency
-M24 Mar 2028  REVIEW. $51K MRR / $618K ARR target
+M13 Apr 2027  Growth hire. Paid acquisition test
+M14 Mag 2027  API documentation pubblica
+M15 Giu 2027  API as a service (beta). Primi API customer
+M16 Lug 2027  SDK client (JS/Python)
+M17 Ago 2027  Dashboard v2 (tipo Render)
+M18 Set 2027  CHECKPOINT. $55K MRR. Series A conversations?
+M19 Ott 2027  Plugin/webhook ecosystem
+M20 Nov 2027  CLI scriptabile (--json, pipe, CI/CD)
+M21 Dic 2027  Outbound enterprise/agency per API platform
+M22 Gen 2028  API pricing tiers (usage-based)
+M23 Feb 2028  Partner program (agency, freelancer)
+M24 Mar 2028  REVIEW. $100K MRR / $1.2M ARR target
 ```

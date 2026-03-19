@@ -50,7 +50,7 @@ export const termsContent: BilingualLegalDocument = {
       {
         heading: "5. Pricing, Commissions & Payments",
         paragraphs: [
-          "Fooshop charges a 5% commission on each sale. There are no subscription fees, listing fees, or other hidden costs. Creators receive 95% of each sale amount.",
+          "Fooshop charges an 8% commission on each sale (Free tier). Pro ($19/mo) pays 3%, Business ($49/mo) pays 0%. There are no listing fees or other hidden costs.",
           "Payments are processed through Stripe Connect. Creators are paid directly to their connected Stripe account. Fooshop does not hold or manage creator funds beyond the commission amount.",
           "All prices are set by creators and displayed in the currency specified by the creator. Creators are responsible for setting appropriate prices and complying with local tax obligations."
         ]
@@ -138,7 +138,7 @@ export const termsContent: BilingualLegalDocument = {
       {
         heading: "5. Prezzi, Commissioni e Pagamenti",
         paragraphs: [
-          "Fooshop applica una commissione del 5% su ogni vendita. Non ci sono costi di abbonamento, costi di inserzione o altri costi nascosti. I creator ricevono il 95% dell'importo di ogni vendita.",
+          "Fooshop applica una commissione dell'8% su ogni vendita (tier Free). Il tier Pro ($19/mese) paga il 3%, il tier Business ($49/mese) paga lo 0%. Non ci sono costi di inserzione o altri costi nascosti.",
           "I pagamenti sono elaborati tramite Stripe Connect. I creator vengono pagati direttamente sul loro account Stripe collegato. Fooshop non detiene o gestisce i fondi dei creator oltre l'importo della commissione.",
           "Tutti i prezzi sono stabiliti dai creator e visualizzati nella valuta specificata dal creator. I creator sono responsabili di impostare prezzi appropriati e di rispettare gli obblighi fiscali locali."
         ]

@@ -1,4 +1,4 @@
-const DEFAULT_COMMISSION_PERCENT = 5;
+const DEFAULT_COMMISSION_PERCENT = 8;
 
 export type CommissionOverride = {
   commissionOverridePercent: number | null;

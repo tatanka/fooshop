@@ -1,8 +1,9 @@
 import { createHash } from "crypto";
 import { db } from "@/db";
-import { apiKeys } from "@/db/schema";
+import { apiKeys, creators } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 export function hashApiKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");
@@ -69,4 +70,93 @@ export function insufficientScope(scope: string) {
     { error: "Insufficient scope", required: scope },
     { status: 403 }
   );
+}
+
+export const CREATOR_SCOPES = [
+  "store:read",
+  "store:write",
+  "products:read",
+  "products:write",
+  "orders:read",
+  "analytics:read",
+  "coupons:read",
+  "coupons:write",
+  "referrals:read",
+  "referrals:write",
+] as const;
+
+export type CreatorScope = (typeof CREATOR_SCOPES)[number];
+
+type CreatorRow = typeof creators.$inferSelect;
+
+type AuthenticateCreatorSuccess = {
+  creator: CreatorRow;
+  authType: "session" | "api_key";
+  userId?: string;
+};
+
+export async function authenticateCreator(
+  req: NextRequest,
+  requiredScope?: CreatorScope
+): Promise<AuthenticateCreatorSuccess | NextResponse> {
+  // 1. Check if request has a Bearer token
+  const hasBearerToken = req.headers
+    .get("authorization")
+    ?.startsWith("Bearer fsk_");
+
+  if (hasBearerToken) {
+    // If Bearer token present, MUST authenticate via API key — no session fallback
+    const apiKeyAuth = await validateApiKey(req);
+    if (!apiKeyAuth) {
+      return NextResponse.json(
+        { error: "Invalid or expired API key" },
+        { status: 401 }
+      );
+    }
+    // Check scope
+    if (requiredScope && !hasScope(apiKeyAuth, requiredScope)) {
+      return insufficientScope(requiredScope);
+    }
+    // Look up creator by creatorId
+    if (!apiKeyAuth.creatorId) {
+      return NextResponse.json(
+        { error: "API key not linked to a creator" },
+        { status: 403 }
+      );
+    }
+    const creator = await db
+      .select()
+      .from(creators)
+      .where(eq(creators.id, apiKeyAuth.creatorId))
+      .then((rows) => rows[0]);
+
+    if (!creator) {
+      return NextResponse.json(
+        { error: "Creator not found" },
+        { status: 404 }
+      );
+    }
+    return { creator, authType: "api_key" };
+  }
+
+  // 2. Fall back to session auth
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const creator = await db
+    .select()
+    .from(creators)
+    .where(eq(creators.userId, session.user.id))
+    .then((rows) => rows[0]);
+
+  if (!creator) {
+    return NextResponse.json(
+      { error: "Creator not found" },
+      { status: 404 }
+    );
+  }
+
+  return { creator, authType: "session", userId: session.user.id };
 }

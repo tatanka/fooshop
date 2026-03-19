@@ -66,7 +66,7 @@ cli/
 
 ```json
 {
-  "apiKey": "fsk_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "apiKey": "fsk_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
   "baseUrl": "https://fooshop.ai",
   "email": "emanuele@exelab.com"
 }
@@ -112,35 +112,41 @@ Approval page UI:
 - Fooshop logo
 - "Fooshop CLI wants to access your account"
 - Shows user email and name
-- "Approve" button → POST to `/api/auth/cli-callback`
+- **Form submission** (not fetch/AJAX) — `<form method="POST" action="/api/auth/cli-callback">` with hidden `port` and `nonce` fields
+- "Approve" button submits the form — browser follows the 302 redirect natively
 - "Deny" button → redirect to localhost with `?error=denied`
+
+**CSRF protection:** Server component generates a one-time `nonce` (random UUID), stores it in a short-lived cookie (60s, httpOnly, sameSite=strict). The `/api/auth/cli-callback` endpoint validates that the nonce in the form body matches the cookie, then deletes the cookie.
 
 ### `/api/auth/cli-callback` Endpoint
 
 Location: `src/app/api/auth/cli-callback/route.ts`
 
-POST handler:
+POST handler (receives form data, not JSON):
 1. Verify session via `auth()` — 401 if not authenticated
-2. Read `port` from request body (JSON), validate as integer in range 1024-65535
-3. Look up creator by `session.user.id`:
+2. Validate CSRF nonce: compare form body `nonce` with `cli-auth-nonce` cookie — 403 if mismatch, then delete cookie
+3. Read `port` from form body, validate as integer in range 1024-65535
+4. Look up creator by `session.user.id`:
    - If exists: use existing creator
-   - If not: create new creator record with `email`, `name` from session, no slug
-4. Check for existing CLI API key for this creator (name: "Fooshop CLI"):
+   - If not: create new creator record with `email`, `name` from session, slug derived from email prefix + random suffix (e.g., `emanuele-a3f7`) to satisfy NOT NULL unique constraint
+5. Check for existing CLI API key for this creator (name: "Fooshop CLI"):
    - If exists: revoke old key (delete from DB), generate new one
    - This prevents key accumulation from repeated `fooshop login`
-5. Generate API key via `generateApiKey()` from `src/lib/api-key.ts`
-6. Insert into `apiKeys` table:
+6. Generate API key via `generateApiKey()` from `src/lib/api-key.ts`
+7. Insert into `apiKeys` table:
    - `creatorId`: creator's ID
    - `name`: "Fooshop CLI"
    - `scopes`: all `CREATOR_SCOPES`
    - `expiresAt`: null (no expiry)
-7. Redirect (302) to `http://localhost:<port>/callback?key=<plaintext_key>&email=<email>`
+8. Redirect (302) to `http://localhost:<port>/callback?key=<plaintext_key>&email=<email>`
 
 ## Security
 
 - **Port validation:** Integer, range 1024-65535
 - **Localhost only:** CLI server binds to `127.0.0.1`, not `0.0.0.0`
 - **Session-gated:** API key generation requires active session cookie
+- **CSRF nonce:** One-time nonce in form + httpOnly cookie prevents cross-site request forgery
+- **Form submission:** Uses native form POST (not fetch) so browser follows 302 redirect to localhost
 - **Key rotation:** Repeated logins revoke previous CLI key
 - **Key in URL:** Appears only in localhost redirect — same pattern as GitHub CLI, Stripe CLI, Vercel CLI. Key never stored in browser, only in terminal config file.
 - **No PKCE needed:** The API key is generated server-side and passed to localhost. No client secret exchange. If needed in future, can add PKCE.
@@ -155,6 +161,8 @@ POST handler:
 ## Out of Scope
 
 - Other CLI commands (`fooshop init`, `fooshop products`, etc.) — separate issues
+- `fooshop logout` and `fooshop whoami` — will be added as follow-up commands
 - API key scoping per command — all CREATOR_SCOPES for now
 - PKCE or code exchange — unnecessary for localhost redirect pattern
 - Windows support — macOS and Linux only per acceptance criteria
+- Config file is shared with admin CLI (`~/.fooshop/config.json`) — both use same `apiKey` field. Admin CLI will need a separate key field if admin-scoped keys are needed in the future

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authenticateCreator } from "@/lib/api-key";
 import { db } from "@/db";
 import { products, creators, pageViews } from "@/db/schema";
 import { eq, and, or, ilike, lte, desc } from "drizzle-orm";
@@ -18,20 +18,9 @@ export async function GET(req: NextRequest) {
 
   // If ?mine=true, return authenticated creator's products
   if (req.nextUrl.searchParams.get("mine") === "true") {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const creator = await db
-      .select()
-      .from(creators)
-      .where(eq(creators.userId, session.user.id))
-      .then((rows) => rows[0]);
-
-    if (!creator) {
-      return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-    }
+    const result = await authenticateCreator(req, "products:read");
+    if (result instanceof NextResponse) return result;
+    const { creator } = result;
 
     const myProducts = await db
       .select({ product: products, creatorSlug: creators.slug })
@@ -89,27 +78,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const result = await authenticateCreator(req, "products:write");
+  if (result instanceof NextResponse) return result;
+  const { creator } = result;
 
   const { data: body, error: parseError } = await parseBody(req);
   if (parseError) return parseError;
-  const result = productCreateSchema.safeParse(body);
-  if (!result.success) return validationError(result.error);
+  const schemaResult = productCreateSchema.safeParse(body);
+  if (!schemaResult.success) return validationError(schemaResult.error);
 
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
-
-  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = result.data;
+  const { title, description, priceCents, category, status, fileUrl, coverImageUrl } = schemaResult.data;
 
   const slug = title
     .toLowerCase()

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authenticateCreator } from "@/lib/api-key";
 import { db } from "@/db";
-import { creators, referrals, referralConversions, products } from "@/db/schema";
+import { referrals, referralConversions, products } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { parseBody, validationError } from "@/lib/validations/helpers";
 import { referralUpdateSchema } from "@/lib/validations/referrals";
@@ -11,20 +11,9 @@ interface Props {
 }
 
 export async function PUT(req: NextRequest, { params }: Props) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+  const authResult = await authenticateCreator(req, "referrals:write");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const { id } = await params;
   const { data: body, error: parseError } = await parseBody(req);
@@ -67,20 +56,9 @@ export async function PUT(req: NextRequest, { params }: Props) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Props) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+  const authResult = await authenticateCreator(req, "referrals:write");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const { id } = await params;
 

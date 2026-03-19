@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateCreator } from "@/lib/api-key";
 import { db } from "@/db";
-import { orders, creators, products } from "@/db/schema";
+import { orders, products } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 function escapeCsvField(value: string): string {
@@ -11,21 +11,10 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+export async function GET(req: NextRequest) {
+  const authResult = await authenticateCreator(req, "orders:read");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const rows = await db
     .select({

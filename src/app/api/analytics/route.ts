@@ -1,6 +1,6 @@
 // src/app/api/analytics/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authenticateCreator } from "@/lib/api-key";
 import { db } from "@/db";
 import {
   orders,
@@ -48,20 +48,9 @@ function previousRange(days: number): { start: Date; end: Date } {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+  const authResult = await authenticateCreator(request, "analytics:read");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const period = parsePeriod(request.nextUrl.searchParams.get("period"));
   const days = periodToDays(period);

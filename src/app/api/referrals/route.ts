@@ -1,27 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authenticateCreator } from "@/lib/api-key";
 import { db } from "@/db";
-import { creators, referrals, referralConversions, products } from "@/db/schema";
+import { referrals, referralConversions, products } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { generateReferralCode } from "@/lib/referral";
 import { parseBody, validationError } from "@/lib/validations/helpers";
 import { referralCreateSchema } from "@/lib/validations/referrals";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+export async function GET(req: NextRequest) {
+  const authResult = await authenticateCreator(req, "referrals:read");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const rows = await db
     .select({
@@ -41,20 +30,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const creator = await db
-    .select()
-    .from(creators)
-    .where(eq(creators.userId, session.user.id))
-    .then((rows) => rows[0]);
-
-  if (!creator) {
-    return NextResponse.json({ error: "Creator not found" }, { status: 404 });
-  }
+  const authResult = await authenticateCreator(req, "referrals:write");
+  if (authResult instanceof NextResponse) return authResult;
+  const { creator } = authResult;
 
   const { data: body, error: parseError } = await parseBody(req);
   if (parseError) return parseError;

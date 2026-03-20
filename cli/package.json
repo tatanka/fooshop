@@ -1,0 +1,29 @@
+{
+  "name": "fooshop",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fooshop CLI — commerce from your terminal",
+  "main": "dist/index.js",
+  "bin": {
+    "fooshop": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "open": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5",
+    "vitest": "^2.1.9"
+  }
+}

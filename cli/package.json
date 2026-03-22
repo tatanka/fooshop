@@ -13,13 +13,19 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.3.2",
+    "chalk": "^5.6.2",
+    "cli-table3": "^0.6.5",
     "commander": "^13.0.0",
-    "open": "^10.0.0"
+    "open": "^10.0.0",
+    "ora": "^9.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
